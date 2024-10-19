@@ -32,6 +32,58 @@ Your answer should be as follows:
 '''
 # description: <a detailed description of the person>
 # reason: <reason for the person>
+persona_com_instruct_generate = '''
+Please generate **only one** new description based on the existing description and the given task or
+question. Then, using all the descriptions, create a new, more challenging version of the task
+or question.
+### Important: The new description should differ from the previous description and relate to the context
+of the question.
+### Format:
+[Description]: Here are the existing description.
+[Original Question]: Here is the original question.
+Output:
+[New Description]: Here is the new description.
+[New Question]: Here is the new question.
+### Your Task:
+[Description]: {description}
+[Original Question]: {question}
+Output:
+'''
+
+persona_com_instruct_generate_rewrite = '''
+Please rewrite one new description based on the existing description and the given task or
+question. Then, using the new description, create a new, more challenging version of the task
+or question.
+### Important: The new description should differ from the previous description and relate to the context
+of the question.
+### Format:
+[Description]: Here are the existing description.
+[Original Question]: Here is the original question.
+Output:
+[New Description]: Here is the new description.
+[New Question]: Here is the new question.
+### Your Task:
+[Description]: {description}
+[Original Question]: {question}
+Output:
+'''
+
+persona_diff_instruct_generate='''
+Generate new description and a corresponding query based on the following description and query.
+### Important:
+1. The new description and query must differ from the examples provided.
+2. Don't provide a solution or answer to the query.
+3. Output Format is as follows:
+Output:
+[description]: xxx [question]: xxx
+### Example:
+[description]: {description1} [question]: {question1}
+[description]: {description2} [question]: {question2}
+[description]: {description3} [question]: {question3}
+[description]: {description4} [question]: {question4}
+Output:
+'''
+
 instruct_generate = '''
 I am creating a high quality dataset to test the capabilities of AI in different professions and fields, please help me generate a high quality example for this dataset!
 
@@ -58,5 +110,9 @@ Your answer should be as follows:
 '''
 
 answer_generate = '''
-
+Below is an instruction that describes a task, write a response that appropriately completes
+the request.
+### Instruction:
+{instruction}
+### Response:
 '''

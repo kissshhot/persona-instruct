@@ -5,7 +5,7 @@ import json
 import random
 import re
 import string
-import tqdm
+from tqdm import tqdm
 import argparse
 from prompts.prompt_template import persona_generate, persona_generate_simple
 # os.environ["CUDA_VISIBLE_DEVICES"] = "5,6,7"
@@ -59,10 +59,11 @@ if __name__ == "__main__":
 
     persona_add = []
     all_logs=[]
-    for idx in range(len(seed_tasks)): #len(seed_tasks)
-        dialogue = ''
-        for tx in seed_tasks[idx]['conversations']:
-            dialogue += tx + '\n'
+    for idx in tqdm(range(len(seed_tasks))): #len(seed_tasks)
+        # dialogue = ''
+        # for tx in seed_tasks[idx]['conversations']:
+        #     dialogue += tx + '\n'
+        dialogue = seed_tasks[idx]['conversations'][0]
         # dialogue = seed_tasks[idx]['conversations'] # + '\n' + seed_tasks[idx]['instances'][0]['input'] + '\n' + seed_tasks[idx]['instances'][0]['output']
         inputs = persona_generate.format(dialogue=dialogue)
         conversation = [{"role": "user", "content": inputs}]
@@ -83,10 +84,15 @@ if __name__ == "__main__":
         print(tokenizer.decode(outputs[0][len(inputs[0]):], skip_special_tokens=True))
         t = seed_tasks[idx]
         if len(result.split('### persona:\n')) == 2:
-            t['persona'] = result.split('### persona:\n')[1]
+            persona = result.split('### persona:\n')[1]
+            if len(persona.split('\n')) >= 2:
+                t['persona'] = persona.split('\n')[0]
+            else:
+                t['persona'] = persona
             all_logs.append(t)
         else:
             t['persona'] = 'error'
             all_logs.append(t)
+        print(t['persona'])
         # output log at each iteration
-    output_log_jsonl(os.path.join(args.batch_dir, "persona_add_lima.jsonl"), all_logs) 
+        output_log_jsonl(os.path.join(args.batch_dir, "persona_add_lima.jsonl"), all_logs) 
