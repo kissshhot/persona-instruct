@@ -7,7 +7,7 @@ import re
 import string
 from tqdm import tqdm
 import argparse
-from prompts.prompt_template import persona_generate, persona_generate_simple
+from prompts.prompt_template_persona2 import persona_generate, persona_generate_simple
 # os.environ["CUDA_VISIBLE_DEVICES"] = "5,6,7"
 model_id = "/data1/dyf/model/Mistral-7B-Instruct-v0.3/"
 tokenizer = AutoTokenizer.from_pretrained(model_id)
@@ -59,7 +59,7 @@ if __name__ == "__main__":
 
     persona_add = []
     all_logs=[]
-    for idx in [27, 116, 294, 802, 842, 846]:# tqdm(range(len(seed_tasks))): #len(seed_tasks)
+    for idx in tqdm(range(len(seed_tasks))): #len(seed_tasks)
         # dialogue = ''
         # for tx in seed_tasks[idx]['conversations']:
         #     dialogue += tx + '\n'
@@ -83,16 +83,22 @@ if __name__ == "__main__":
         result = tokenizer.decode(outputs[0][len(inputs[0]):], skip_special_tokens=True)
         print(tokenizer.decode(outputs[0][len(inputs[0]):], skip_special_tokens=True))
         t = seed_tasks[idx]
-        if len(result.split('### persona:\n')) == 2:
-            persona = result.split('### persona:\n')[1]
-            if len(persona.split('\n')) >= 2:
-                t['persona'] = persona.split('\n')[0]
+        if len(result.split('### questioner:\n')) == 2:
+            questioner = result.split('### questioner:\n')[1].split('\n')[0]
+            t['questioner'] = questioner
+        else:
+            t['questioner'] = 'error'
+        if len(result.split('### respondent:\n')) == 2:
+            respondent = result.split('### respondent:\n')[1]
+            if len(respondent.split('\n')) >= 2:
+                t['respondent'] = respondent.split('\n')[0]
             else:
-                t['persona'] = persona
+                t['respondent'] = respondent
             all_logs.append(t)
         else:
-            t['persona'] = 'error'
+            t['respondent'] = 'error'
             all_logs.append(t)
-        print(t['persona'])
+        print(t['questioner'])
+        print(t['respondent'])
         # output log at each iteration
-        output_log_jsonl(os.path.join(args.batch_dir, "persona_add_lima.jsonl"), all_logs) 
+        output_log_jsonl(os.path.join(args.batch_dir, "persona_add_lima_persona2.jsonl"), all_logs) 

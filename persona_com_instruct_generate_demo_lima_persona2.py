@@ -9,7 +9,7 @@ import re
 import string
 import tqdm
 import argparse
-from prompts.prompt_template import persona_generate, persona_generate_simple, persona_com_instruct_generate_rewrite
+from prompts.prompt_template_persona2 import persona_generate, persona_generate_simple, persona_com_instruct_generate_rewrite
 from prompts.score_template import score_template
 os.environ["CUDA_VISIBLE_DEVICES"] = "5,6,7"
 model_id = "/data1/dyf/model/Mistral-7B-Instruct-v0.3/"
@@ -148,10 +148,11 @@ def random_sample(seed_tasks, batch_length, roundi): #随机选择数据进行ge
         # dialogue = ''
         # for tx in seed_tasks[idx]['conversations']:
         #     dialogue += tx + '\n'
-        description = task[idx]['persona']
+        questioner = task[idx]['questioner']
+        respondent = task[idx]['respondent']
         question = task[idx]['conversations'][0]
         # dialogue = seed_tasks[idx]['instruction'] # + '\n' + seed_tasks[idx]['instances'][0]['input'] + '\n' + seed_tasks[idx]['instances'][0]['output']
-        inputs = persona_com_instruct_generate_rewrite.format(description=description, question=question)
+        inputs = persona_com_instruct_generate_rewrite.format(questioner=questioner, respondent=respondent, question=question)
         conversation = [{"role": "user", "content": inputs}]
         # tools = [get_current_weather]
 
@@ -171,7 +172,8 @@ def random_sample(seed_tasks, batch_length, roundi): #随机选择数据进行ge
             documents.append(question)
             print(tokenizer.decode(outputs[0][len(inputs[0]):], skip_special_tokens=True))
             t = {}
-            t['persona'] = result.split('[New Description]: ')[1].split('\n')[0]
+            t['questioner'] = result.split('[New questioner]: ')[1].split('\n')[0]
+            t['respondent'] = result.split('[New respondent]: ')[1].split('\n')[0]
             t['conversation'] = []
             t['conversation'].append(question)
             # t['id'] = 'com_1'

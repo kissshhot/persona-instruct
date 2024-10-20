@@ -8,3 +8,19 @@ Your answer should be as follows:
 ## Score:
 <The score you gave>
 '''
+
+choose_template='''
+Here's the instruct:
+### Instruct:
+{instruct}
+Please choose the most correct and clear answer from the three responses below:
+### response A:
+{responseA}
+### response B:
+{responseB}
+### response C:
+{responseC}
+Your answer should be as follows:
+## Choice:
+< A|B|C >
+'''

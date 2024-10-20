@@ -7,7 +7,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "5,6,7"
 model_id = "/data1/dyf/model/Mistral-7B-Instruct-v0.3/"
 tokenizer = AutoTokenizer.from_pretrained(model_id)
 model = AutoModelForCausalLM.from_pretrained(model_id, device_map="auto")
-from prompts.prompt_template import answer_generate
+from prompts.prompt_template_persona2 import answer_generate_persona
 # rejection sampling
 # 接下来，我们设定一些标准，比如：
 # 回答必须与问题相关。
@@ -61,10 +61,34 @@ def output_log_jsonl(log_file, all_logs):
         for log in all_logs:
             f.write(json.dumps(log) + "\n")
 
-def single_sample():
+def single_sample(seed_tasks):
     for t in seed_tasks:
-        instruction = t['conversation'][0]
-        inputs = answer_generate.format(instruction=instruction)
+        respondent = t['respondent']
+        instruction = t['question']
+        inputs = answer_generate_persona.format(respondent=respondent, instruction=instruction)
+        conversation = [{"role": "user", "content": inputs}]
+        # tools = [get_current_weather]
+
+        # format and tokenize the tool use prompt 
+        inputs = tokenizer.apply_chat_template(
+                    conversation,
+                    add_generation_prompt=True,
+                    # return_dict=True,
+                    return_tensors="pt",
+        )
+
+        inputs = inputs.to('cuda')
+        outputs = model.generate(inputs, max_new_tokens=5000, do_sample=True, temperature=0.7, top_p=0.9) #现在貌似是gs，后面可能要改成sample
+        result = tokenizer.decode(outputs[0][len(inputs[0]):], skip_special_tokens=True)
+        answer = result.split('### Response:')[1]
+        t['conversations'].append(answer)
+        output_log_jsonl(os.path.join("/home/dyf/data_generate/persona-instruct/data/lima/persona_response/", f"new_data.jsonl"), seed_tasks) 
+
+def multi_sample(seed_tasks): #生成多个回答并进行选择
+    for t in seed_tasks:
+        respondent = t['respondent']
+        instruction = t['question']
+        inputs = answer_generate.format(respondent=respondent, instruction=instruction)
         conversation = [{"role": "user", "content": inputs}]
         # tools = [get_current_weather]
 
@@ -86,3 +110,4 @@ def single_sample():
 if __name__ == "__main__":
     args = parse_args()
     seed_tasks = [json.loads(l) for l in open(args.seed_tasks_path, "r")]
+    single_sample(seed_tasks)
