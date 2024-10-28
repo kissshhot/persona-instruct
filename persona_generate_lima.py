@@ -65,8 +65,8 @@ if __name__ == "__main__":
         #     dialogue += tx + '\n'
         dialogue = seed_tasks[idx]['conversations'][0]
         # dialogue = seed_tasks[idx]['conversations'] # + '\n' + seed_tasks[idx]['instances'][0]['input'] + '\n' + seed_tasks[idx]['instances'][0]['output']
-        inputs = persona_generate.format(dialogue=dialogue)
-        conversation = [{"role": "user", "content": inputs}]
+        prompt = persona_generate.format(dialogue=dialogue)
+        conversation = [{"role": "user", "content": prompt}]
         # tools = [get_current_weather]
 
 
@@ -95,4 +95,4 @@ if __name__ == "__main__":
             all_logs.append(t)
         print(t['persona'])
         # output log at each iteration
-        output_log_jsonl(os.path.join(args.batch_dir, "persona_add_lima.jsonl"), all_logs) 
+        output_log_jsonl(os.path.join(args.batch_dir, "persona_add_lima1.jsonl"), all_logs) 

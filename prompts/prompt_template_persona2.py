@@ -61,39 +61,56 @@ Output:
 
 persona_com_instruct_generate_rewrite = '''
 Please rewrite one new description based on the existing description and the given task or
-question. Then, using the new description, create a new, more challenging version of the task
+question. Then, using the new description, create a new, high quality and more challenging version of the task
 or question.
 ### Important: The new description should differ from the previous description and relate to the context
 of the question.
 ### Format:
-[questioner]: Here are the existing description of questioner.
-[respondent]: Here are the existing description of respondent.
+[Questioner]: Here are the existing description of questioner.
+[Respondent]: Here are the existing description of respondent.
 [Original Question]: Here is the original question.
 Output:
-[New questioner]: Here is the new description of questioner.
-[New respondent]: Here is the new description of respondent.
+[New Questioner]: Here is the description of new questioner.
+[New Respondent]: Here is the description of new respondent.
 [New Question]: Here is the new question.
 ### Your Task:
-[questioner]: {questioner}
-[respondent]: {respondent}
+[Questioner]: {questioner}
+[Respondent]: {respondent}
 [Original Question]: {question}
 Output:
 '''
-
+# The topic of the new questioner, respondent and query must differ from the topic of the examples provided.
+# The new questioner, respondent and query must differ from the examples provided.
+# mustdifferfromtheexamplesprovided.
+# 2. Ensure that the new questioner, respondent and query are not associated with any of the examples.
 persona_diff_instruct_generate='''
-Generate new description and a corresponding query based on the following description and query.
+Generate a new questioner, a new respondent and a new corresponding query based on the following questioner, respondent and query.
 ### Important:
-1. The new description and query must differ from the examples provided.
-2. Don't provide a solution or answer to the query.
-3. Output Format is as follows:
-Output:
-[questioner]: xxx [question]: xxx
+1. The new questioner, respondent and query must differ from the examples provided.
+2. Ensure that the content you generate is of high quality.
+3. Don't provide a solution or answer to the query.
 ### Example:
-[questioner]: {questioner1} [respondent]: {respondent1} [question]: {question1}
-[questioner]: {questioner2} [respondent]: {respondent2} [question]: {question2}
-[questioner]: {questioner3} [respondent]: {respondent3} [question]: {question3}
-[questioner]: {questioner4} [respondent]: {respondent4} [question]: {question4}
-Output:
+Example 1:
+[questioner]: {questioner1}
+[respondent]: {respondent1}
+[question]: {question1}
+Example 2:
+[questioner]: {questioner2}
+[respondent]: {respondent2}
+[question]: {question2}
+Example 3:
+[questioner]: {questioner3}
+[respondent]: {respondent3}
+[question]: {question3}
+Example 4:
+[questioner]: {questioner4}
+[respondent]: {respondent4}
+[question]: {question4}
+
+Your output should be as follows:
+[New Questioner]: Here is the description of new questioner.
+[New Respondent]: Here is the description of new respondent.
+[New Question]: Here is the new question.
 '''
 
 instruct_generate = '''
