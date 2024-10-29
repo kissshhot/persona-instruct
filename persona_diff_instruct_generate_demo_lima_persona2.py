@@ -12,7 +12,7 @@ import re
 import string
 import tqdm
 import argparse
-from prompts.prompt_template_persona2 import persona_generate, persona_generate_simple, persona_diff_instruct_generate
+from prompts.prompt_template_persona2 import persona_generate, persona_generate_simple, persona_diff_instruct_generate, persona_diff_instruct_generate_simple
 from prompts.score_template import score_template
 os.environ["CUDA_VISIBLE_DEVICES"] = "4,5,6,7"
 model_id = "/data1/dyf/model/Mistral-7B-Instruct-v0.3/"
@@ -232,9 +232,15 @@ def UCB_sample_record(seed_tasks, batch_length, roundi, is_vllm, model, sampling
 
     all_logs=[]
     documents = []
+    questioner_doc = []
+    respondent_doc = []
     wrong_log = []
     for tmp in seed_tasks:
         documents.append(tmp['conversations'][0])
+    for tmp in seed_tasks:
+        questioner_doc.append(tmp['questioner'])
+    for tmp in seed_tasks:
+        respondent_doc.append(tmp['respondent'])
     if is_vllm == True:
         # chat_formatting_function = dynamic_import_function("templates.create_prompt_with_huggingface_tokenizer_template")
         # model = vllm.LLM(
@@ -292,8 +298,8 @@ def UCB_sample_record(seed_tasks, batch_length, roundi, is_vllm, model, sampling
             #如果达标了才select_time + 1，那么就会一直重复选这k个
             for temp in task:
                 temp['select_time'] = temp['select_time'] + 1
-
             prompt = persona_diff_instruct_generate.format(questioner1=task[0]['questioner'], questioner2=task[1]['questioner'], questioner3=task[2]['questioner'], questioner4=task[3]['questioner'], respondent1=task[0]['respondent'], respondent2=task[1]['respondent'], respondent3=task[2]['respondent'], respondent4=task[3]['respondent'], question1=task[0]['conversations'][0], question2=task[1]['conversations'][0], question3=task[2]['conversations'][0], question4=task[3]['conversations'][0])
+            # prompt = persona_diff_instruct_generate_simple.format(questioner1=task[0]['questioner'], questioner2=task[1]['questioner'], questioner3=task[2]['questioner'], question1=task[0]['conversations'][0], question2=task[1]['conversations'][0], question3=task[2]['conversations'][0])
             t = 0
             while True:
                 if t == 5:
@@ -303,11 +309,12 @@ def UCB_sample_record(seed_tasks, batch_length, roundi, is_vllm, model, sampling
                     break
                 result = use_vllm([prompt], model, sampling_params, chat_formatting_function)
                 try:
-                    question = result.split('[New Question]: ')[1]
+                    question = result.split('[New Question]: ')[1].split('[Reason]: ')[0].strip()
                     # if len(question.split('\n')) >= 2:
                     #     question = question.split('\n')[0]
-                    questioner = result.split('[New Questioner]: ')[1].split('\n')[0]
-                    respondent = result.split('[New Respondent]: ')[1].split('\n')[0]
+                    # questioner = result.split('### questioner:\n')[1].split('\n### respondent:\n')[0].strip()
+                    questioner = result.split('[New Questioner]: ')[1].split('[New Question]: ')[0].strip()
+                    # respondent = result.split('[New Respondent]: ')[1].split('[New Question]: ')[0].strip()
                     break
                 except:
                     t += 1
@@ -319,20 +326,25 @@ def UCB_sample_record(seed_tasks, batch_length, roundi, is_vllm, model, sampling
                 #     if len(question.split('\n')) >= 2:
                 #         question = question.split('\n')[0]
                 #     break
-            if 'environmental' in questioner:
-                wrong_log = wrong_log + task
+            # if 'environmental' in questioner:
+            #     wrong_log = wrong_log + task
             #     pdb.set_trace()
-
-            if filter_output(documents, question): # and quality_score_vllm(question, model, sampling_params, chat_formatting_function):
+            print(prompt)
+            print(result)
+            if filter_output(documents, question) and filter_output(questioner_doc, questioner): # and filter_output(respondent_doc, respondent): # and quality_score_vllm(question, model, sampling_params, chat_formatting_function):
                 x = 0
                 documents.append(question)
+                questioner_doc.append(questioner)
+                # respondent_doc.append(respondent)
                 print(result)
                 t = {}
                 t['questioner'] = questioner
-                t['respondent'] = respondent
+                # t['respondent'] = respondent
                 t['conversations'] = []
                 t['conversations'].append(question)
                 t['select_time'] = 1
+                if 'environmental' in questioner:
+                    wrong_log = wrong_log + task + [t]
                 all_logs.append(t)
                 seed_tasks.append(t)
                 # output log at each iteration
@@ -341,7 +353,7 @@ def UCB_sample_record(seed_tasks, batch_length, roundi, is_vllm, model, sampling
                 output_log_jsonl(os.path.join('/home/dyf/data_generate/persona-instruct/data/lima/epoch/diff/', f"diff_new_instruct_{batch_length}_person2_round_{roundi}.jsonl"), all_logs)
                 # output log merge
                 output_log_jsonl(os.path.join("/home/dyf/data_generate/persona-instruct/data/lima/merged/", f"diff_merged_instruct_{batch_length}_person2_round_{roundi}.jsonl"), seed_tasks)
-                # output_log_jsonl(os.path.join("/home/dyf/data_generate/persona-instruct/data/lima/wrong/", f"wrong_log_round_{roundi}.jsonl"), wrong_log)
+                output_log_jsonl(os.path.join("/home/dyf/data_generate/persona-instruct/data/lima/wrong/", f"wrong_log_round_{roundi}.jsonl"), wrong_log)
             else:
                 x += 1
                 continue

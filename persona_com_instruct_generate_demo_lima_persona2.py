@@ -306,9 +306,9 @@ def random_sample(seed_tasks, roundi, is_vllm, model, sampling_params, chat_form
                     break
                 result = use_vllm([prompt], model, sampling_params, chat_formatting_function)
                 try:
-                    question = result.split('[New Question]: ')[1]
-                    questioner = result.split('[New Questioner]: ')[1].split('\n')[0]
-                    respondent = result.split('[New Respondent]: ')[1].split('\n')[0]
+                    question = result.split('[New Question]: ')[1].strip()
+                    questioner = result.split('[New Questioner]: ')[1].split('[New Respondent]: ')[0].strip()
+                    respondent = result.split('[New Respondent]: ')[1].split('[New Question]: ')[0].strip()
                     break
                 except:
                     t += 1

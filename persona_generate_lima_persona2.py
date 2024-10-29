@@ -2,6 +2,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
 import os
 import json
+import pdb
 import random
 import re
 import string
@@ -127,8 +128,8 @@ if __name__ == "__main__":
         )
         
         sampling_params = vllm.SamplingParams(
-            temperature=0.7,  # greedy decoding
-            top_p=0.9,
+            temperature=0.3,  # greedy decoding
+            # top_p=0.9,
             max_tokens=5000,
             # stop=args.additional_stop_sequence,
             # --additional_stop_sequence',
@@ -140,16 +141,20 @@ if __name__ == "__main__":
             dialogue = seed_tasks[idx]['conversations'][0]
             # dialogue = seed_tasks[idx]['conversations'] # + '\n' + seed_tasks[idx]['instances'][0]['input'] + '\n' + seed_tasks[idx]['instances'][0]['output']
             prompt = persona_generate.format(dialogue=dialogue)
-            while True:
-                result = use_vllm([prompt], model, sampling_params, chat_formatting_function)
-                try:
-                    questioner = result.split('### questioner:\n')[1].split('\n')[0]
-                    respondent = result.split('### respondent:\n')[1]
-                    if len(respondent.split('\n')) >= 2:
-                        respondent = respondent.split('\n')[0]
-                    break
-                except:
-                    continue
+            # while True:
+            result = use_vllm([prompt], model, sampling_params, chat_formatting_function)
+            try:
+                if len(result.split('### text:\n')) >= 2 and '### questioner:\n' not in result:
+                    questioner = result.split('### text:\n')[1].split('\n### respondent:\n')[0].strip()
+                else:
+                    questioner = result.split('### questioner:\n')[1].split('\n### respondent:\n')[0].strip()
+                respondent = result.split('### respondent:\n')[1].strip()
+                # if len(respondent.split('\n')) >= 2:
+                #     respondent = respondent.split('\n')[0]
+                # break
+            except:
+                #pdb.set_trace()
+                continue
             print(result)
             t = seed_tasks[idx]
             t['questioner'] = questioner
@@ -157,8 +162,11 @@ if __name__ == "__main__":
             all_logs.append(t)
             print(t['questioner'])
             print(t['respondent'])
+            if len(all_logs) >=2:
+                if all_logs[-1] == all_logs[-2]:
+                    pdb.set_trace()
             # output log at each iteration
-            output_log_jsonl(os.path.join(args.batch_dir, "persona_add_lima_persona2.jsonl"), all_logs)
+            output_log_jsonl(os.path.join(args.batch_dir, "persona_add_lima_persona2_w_vllm.jsonl"), all_logs)
     else:
         # tokenizer = AutoTokenizer.from_pretrained(model_id)
         model = AutoModelForCausalLM.from_pretrained(model_id, device_map="auto")
@@ -192,6 +200,7 @@ if __name__ == "__main__":
                         respondent = respondent.split('\n')[0]
                     break
                 except:
+                    pdb.set_trace()
                     continue
             print(result)
             t = seed_tasks[idx]
@@ -200,5 +209,7 @@ if __name__ == "__main__":
             all_logs.append(t)
             print(t['questioner'])
             print(t['respondent'])
+            if all_logs[-1] == all_logs[-2]:
+                pdb.set_trace()
             # output log at each iteration
-            output_log_jsonl(os.path.join(args.batch_dir, "persona_add_lima_persona2.jsonl"), all_logs)
+            output_log_jsonl(os.path.join(args.batch_dir, "persona_add_lima_persona2_wo_vllm.jsonl"), all_logs)

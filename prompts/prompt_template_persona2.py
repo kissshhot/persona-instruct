@@ -84,34 +84,94 @@ Output:
 # mustdifferfromtheexamplesprovided.
 # 2. Ensure that the new questioner, respondent and query are not associated with any of the examples.
 persona_diff_instruct_generate='''
-Generate a new questioner, a new respondent and a new corresponding query based on the following questioner, respondent and query.
+Generate a new questioner and a new query based on the following examples.
+### Example:
+Example 1:
+[questioner]: {questioner1}
+[question]: {question1}
+Example 2:
+[questioner]: {questioner2}
+[question]: {question2}
 ### Important:
-1. The new questioner, respondent and query must differ from the examples provided.
+1. The new questioner must have a collaborative relationship with both Example 1 and Example 2 questioners in work, study or life.
+2. You need to explain the collaborative relationship between the new questioner and the example questioners.
+3. The new question you generate and the example questions are independent of each other.
+3. Don't provide a solution or answer to the new query.
+
+Your output should be as follows:
+[New Questioner]: Here is the description of new questioner.
+[New Question]: Here is the new question.
+[Collaborative Relationship]: Here is the collaborative relationship between the new questioner and the example questioners.
+'''
+# Example 2:
+# [questioner]: {questioner2}
+# [question]: {question2}
+# [respondent]: {respondent1}
+# [New Respondent]: Here is the description of new respondent.
+
+# 2. Ensure that the content you generate is highly diverse.
+# The new questioner, respondent and query must differ from the examples provided.
+# The data you generate must be unrelated to the example provided.
+# Example 1:
+# Example 2:
+# [questioner]: {questioner2}
+# [respondent]: {respondent2}
+# [question]: {question2}
+# Example 3:
+# [questioner]: {questioner3}
+# [respondent]: {respondent3}
+# [question]: {question3}
+# Example 4:
+# [questioner]: {questioner4}
+# [respondent]: {respondent4}
+# [question]: {question4}
+
+persona_diff_instruct_generate_simple='''
+Generate a new questioner and a new corresponding query based on the following examples.
+### Important:
+1. The new questioner and query must differ from the examples provided.
 2. Ensure that the content you generate is of high quality.
 3. Don't provide a solution or answer to the query.
 ### Example:
 Example 1:
 [questioner]: {questioner1}
-[respondent]: {respondent1}
 [question]: {question1}
 Example 2:
 [questioner]: {questioner2}
-[respondent]: {respondent2}
 [question]: {question2}
 Example 3:
 [questioner]: {questioner3}
-[respondent]: {respondent3}
 [question]: {question3}
-Example 4:
-[questioner]: {questioner4}
-[respondent]: {respondent4}
-[question]: {question4}
 
 Your output should be as follows:
 [New Questioner]: Here is the description of new questioner.
-[New Respondent]: Here is the description of new respondent.
 [New Question]: Here is the new question.
 '''
+
+# Example 4:
+# [questioner]: {questioner4}
+# [question]: {question4}
+
+persona_diff_instruct_generate_simple1='''
+Generate a new query based on the following examples.
+### Important:
+1. The new query must differ from the examples provided.
+2. Ensure that the content you generate is of high quality.
+3. Don't provide a solution or answer to the query.
+### Example:
+Example 1:
+[question]: {question1}
+Example 2:
+[question]: {question2}
+Example 3:
+[question]: {question3}
+Example 4:
+[question]: {question4}
+
+Your output should be as follows:
+[New Question]: Here is the new question.
+'''
+
 
 instruct_generate = '''
 I am creating a high quality dataset to test the capabilities of AI in different professions and fields, please help me generate a high quality example for this dataset!

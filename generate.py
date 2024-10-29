@@ -6,7 +6,7 @@ from persona_diff_instruct_generate_demo_lima_persona2 import main_diff
 import vllm
 from importlib import import_module
 import torch
-os.environ["CUDA_VISIBLE_DEVICES"] = "4,5,6,7"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
 model_id = "/data1/dyf/model/Mistral-7B-Instruct-v0.3/"
 
 def parse_args():
