@@ -1,26 +1,14 @@
-import os
+# 假设有一个列表
+my_list = [10, 20, 30, 40, 50]
 
-os.environ["OPENAI_API_KEY"] = "sk-cBMDIQFHqCyqrGlSFb26F27dD9C4445d971a0673A73c7f9a" #输入网站发给你的转发key
+# 假设idx是你要移除的元素的索引
+idx = 2  # 例如，移除第三个元素，索引为2
 
-os.environ["OPENAI_BASE_URL"] = "http://15.204.101.64:4000/v1"
+# 使用del语句
+del my_list[idx]
 
-from openai import OpenAI
+# 或者使用pop方法
+# my_list.pop(idx)
 
-client = OpenAI()
-
-completion = client.chat.completions.create(
-
-model="gpt-4",
-
-messages=[
-
-    {"role": "system", "content": "You are a helpful assistant."},
-
-    {"role": "user", "content": "Hello!"}
-
-]
-
-)
-
-print(completion)
-print('test')
+print(my_list.pop(0))  # 输出: [10, 20, 40, 50]
+print(my_list)

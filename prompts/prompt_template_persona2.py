@@ -60,23 +60,24 @@ Output:
 '''
 
 persona_com_instruct_generate_rewrite = '''
-Please rewrite one new description based on the existing description and the given task or
-question. Then, using the new description, create a new, high quality and more challenging version of the task
-or question.
-### Important: The new description should differ from the previous description and relate to the context
-of the question.
+Please generate one new questioner and respondent based on the existing questioner, respondent and the given question. Then, using the new questioner, generate a new, high quality and more challenging version of the question.
+### Important:
+1. The new questioner should differ from the previous questioner and relate to the context of the new question.
+2. You need to explain why the new question is more challenging.
+3. Don't provide a solution or answer to the new question.
 ### Format:
-[Questioner]: Here are the existing description of questioner.
-[Respondent]: Here are the existing description of respondent.
+[Questioner]: Here is the existing description of questioner.
 [Original Question]: Here is the original question.
+[Respondent]: Here is the existing description of respondent.
 Output:
 [New Questioner]: Here is the description of new questioner.
-[New Respondent]: Here is the description of new respondent.
 [New Question]: Here is the new question.
+[New Respondent]: Here is the description of new respondent.
+[Reason]: Your reason for the new question.
 ### Your Task:
 [Questioner]: {questioner}
-[Respondent]: {respondent}
 [Original Question]: {question}
+[Respondent]: {respondent}
 Output:
 '''
 # The topic of the new questioner, respondent and query must differ from the topic of the examples provided.
@@ -96,13 +97,37 @@ Example 2:
 1. The new questioner must have a collaborative relationship with both Example 1 and Example 2 questioners in work, study or life.
 2. You need to explain the collaborative relationship between the new questioner and the example questioners.
 3. The new question you generate and the example questions are independent of each other.
-3. Don't provide a solution or answer to the new query.
+4. Don't provide a solution or answer to the new query.
 
 Your output should be as follows:
 [New Questioner]: Here is the description of new questioner.
 [New Question]: Here is the new question.
 [Collaborative Relationship]: Here is the collaborative relationship between the new questioner and the example questioners.
 '''
+persona_diff_instruct_generate_re='''
+Generate a new questioner, a new respondent and a new query based on the following examples.
+### Example:
+Example 1:
+[questioner]: {questioner1}
+[question]: {question1}
+[respondent]: {respondent1}
+Example 2:
+[questioner]: {questioner2}
+[question]: {question2}
+[respondent]: {respondent2}
+### Important:
+1. The new questioner must have a collaborative relationship with both Example 1 and Example 2 questioners in work, study or life.
+2. You need to explain the collaborative relationship between the new questioner and the example questioners.
+3. The new question you generate and the example questions are independent of each other.
+4. Don't provide a solution or answer to the new query.
+
+Your output should be as follows:
+[New Questioner]: Here is the description of new questioner.
+[New Question]: Here is the new question.
+[New Respondent]: Here is the description of new respondent.
+[Collaborative Relationship]: Here is the collaborative relationship between the new questioner and the example questioners.
+'''
+
 # Example 2:
 # [questioner]: {questioner2}
 # [question]: {question2}

@@ -293,7 +293,10 @@ def random_sample(seed_tasks, roundi, is_vllm, model, sampling_params, chat_form
             # dialogue = ''
             # for tx in seed_tasks[idx]['conversations']:
             #     dialogue += tx + '\n'
-            questioner = seed_tasks[idx]['questioner']
+            try:
+                questioner = seed_tasks[idx]['questioner']
+            except:
+                pdb.set_trace()
             respondent = seed_tasks[idx]['respondent']
             question = seed_tasks[idx]['conversations'][0]
             # dialogue = seed_tasks[idx]['instruction'] # + '\n' + seed_tasks[idx]['instances'][0]['input'] + '\n' + seed_tasks[idx]['instances'][0]['output']
@@ -302,25 +305,26 @@ def random_sample(seed_tasks, roundi, is_vllm, model, sampling_params, chat_form
             while True:
                 if t == 5:
                     # 这里few-shot的例子是乱码，需要移除
-                    seed_tasks = seed_tasks.pop(idx)
+                    seed_tasks.pop(idx)
                     break
                 result = use_vllm([prompt], model, sampling_params, chat_formatting_function)
                 try:
-                    question = result.split('[New Question]: ')[1].strip()
-                    questioner = result.split('[New Questioner]: ')[1].split('[New Respondent]: ')[0].strip()
-                    respondent = result.split('[New Respondent]: ')[1].split('[New Question]: ')[0].strip()
+                    question = result.split('[New Question]: ')[1].split('[New Respondent]: ')[0].strip()
+                    questioner = result.split('[New Questioner]: ')[1].split('[New Question]: ')[0].strip()
+                    respondent = result.split('[New Respondent]: ')[1].split('[Reason]: ')[0].strip()
                     break
                 except:
                     t += 1
                     continue
-            if t == 10:
+            if t == 5:
                 continue
                 # if len(result.split('[New Question]: ')) >= 2:
                 #     question = result.split('[New Question]: ')[1]
                 #     if len(result.split('[New Questioner]: ')) >= 2 and len(result.split('[New Respondent]: ')) >= 2:
                 #         if len(result.split('[New Questioner]: ')[1].split('\n')) >= 2 and len(result.split('[New Respondent]: ')[1].split('\n')) >= 2:
                 #             break
-            if filter_output(documents, question) and quality_score_vllm(question, model, sampling_params, chat_formatting_function):
+            # filter_output(documents, question) and 
+            if True:# quality_score_vllm(question, model, sampling_params, chat_formatting_function):
                 documents.append(question)
                 print(result)
                 t = {}

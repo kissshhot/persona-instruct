@@ -6,7 +6,8 @@ from persona_diff_instruct_generate_demo_lima_persona2 import main_diff
 import vllm
 from importlib import import_module
 import torch
-os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
+# os.environ["CUDA_VISIBLE_DEVICES"] = "6,7"
+# from persona_diff_instruct_generate_demo_lima_persona2 import main_diff
 model_id = "/data1/dyf/model/Mistral-7B-Instruct-v0.3/"
 
 def parse_args():
@@ -22,7 +23,7 @@ def parse_args():
         "--seed_tasks_path",
         type=str,
         # required=True,
-        default="/home/dyf/data_generate/persona-instruct/data/lima/persona2/persona_add_lima_persona2_wo_vllm.jsonl",
+        default="/home/dyf/data_generate/persona-instruct/data/lima/persona2/persona_add_lima_persona2_w_vllm.jsonl",
         help="The path to the human written data.",
     )
     parser.add_argument(
@@ -52,7 +53,7 @@ def parse_args():
     parser.add_argument(
         "--batch_length",
         type=int,
-        default=15000,
+        default=10,
         help="ins generated each round",
     )
     return parser.parse_args()
@@ -107,12 +108,10 @@ if __name__ == "__main__":
             # nargs="+",
             # default=[],
         )
-    for t in seed_tasks:
-        t['select_time'] = 1
     # log2, documents = main_diff(roundi, seed_tasks, args.is_vllm, args.batch_length, model, sampling_params, chat_formatting_function)
     # log1 = main_com(roundi, seed_tasks, args.is_vllm, model, sampling_params, chat_formatting_function, documents)
     seed_tasks, documents = main_diff(roundi, seed_tasks, args.is_vllm, args.batch_length, model, sampling_params, chat_formatting_function)
-    for roundi in range(3):
+    for roundi in range(2):
         seed_tasks = main_com(roundi, seed_tasks, args.is_vllm, model, sampling_params, chat_formatting_function, documents)
     # log1 = main_com(roundi, seed_tasks, args.is_vllm, model, sampling_params, chat_formatting_function, documents)
     # seed_tasks = seed_tasks + log1 + log2
