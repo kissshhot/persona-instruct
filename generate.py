@@ -6,7 +6,7 @@ from persona_diff_instruct_generate_demo_lima_persona2 import main_diff
 import vllm
 from importlib import import_module
 import torch
-# os.environ["CUDA_VISIBLE_DEVICES"] = "6,7"
+os.environ["CUDA_VISIBLE_DEVICES"] = "4,5,6,7"
 # from persona_diff_instruct_generate_demo_lima_persona2 import main_diff
 model_id = "/data1/dyf/model/Mistral-7B-Instruct-v0.3/"
 
@@ -23,7 +23,7 @@ def parse_args():
         "--seed_tasks_path",
         type=str,
         # required=True,
-        default="/home/dyf/data_generate/persona-instruct/data/lima/persona2/persona_add_lima_persona2_w_vllm.jsonl",
+        default="/home/dyf/data_generate/persona-instruct/data/lima/merged/diff_merged_instruct_12000_person2_round_0.jsonl",
         help="The path to the human written data.",
     )
     parser.add_argument(
@@ -85,6 +85,8 @@ if __name__ == "__main__":
     all_logs = []
     roundi = args.roundi
     seed_tasks = [json.loads(l) for l in open(args.seed_tasks_path, "r")]
+    # task2 = [json.loads(l) for l in open('/home/dyf/data_generate/persona-instruct/data/lima/epoch/diff/test.jsonl', "r")]
+    seed_tasks = seed_tasks
     documents = []
     for tmp in seed_tasks:
         documents.append(tmp['conversations'][0])
@@ -110,19 +112,11 @@ if __name__ == "__main__":
         )
     # log2, documents = main_diff(roundi, seed_tasks, args.is_vllm, args.batch_length, model, sampling_params, chat_formatting_function)
     # log1 = main_com(roundi, seed_tasks, args.is_vllm, model, sampling_params, chat_formatting_function, documents)
+
+
     seed_tasks, documents = main_diff(roundi, seed_tasks, args.is_vllm, args.batch_length, model, sampling_params, chat_formatting_function)
-    for roundi in range(2):
-        seed_tasks = main_com(roundi, seed_tasks, args.is_vllm, model, sampling_params, chat_formatting_function, documents)
-    # log1 = main_com(roundi, seed_tasks, args.is_vllm, model, sampling_params, chat_formatting_function, documents)
-    # seed_tasks = seed_tasks + log1 + log2
-    # while True:
-    #     if roundi == 1:
-    #         break
-    #     roundi += 1
-    #     if len(seed_tasks) >= 10000:
-    #         break
-    #     else:
-    #         # log1 = main_com(roundi, log2, args.is_vllm, model, sampling_params, chat_formatting_function, documents) #这里相当于只会把seed和diversity生成的数据再进一步复杂化
-    #         log2, documents = main_diff(roundi, seed_tasks, args.is_vllm, args.batch_length, model, sampling_params, chat_formatting_function)
-    #         seed_tasks = seed_tasks + log1 + log2
-    output_log_jsonl(os.path.join("/home/dyf/data_generate/persona-instruct/data/lima/final/", f"final.jsonl"), seed_tasks)
+    # for roundi in range(2):
+    # # roundi = 1
+    #     seed_tasks = main_com(roundi, seed_tasks, args.is_vllm, model, sampling_params, chat_formatting_function, documents)
+
+    # output_log_jsonl(os.path.join("/home/dyf/data_generate/persona-instruct/data/lima/final/", f"final.jsonl"), seed_tasks)

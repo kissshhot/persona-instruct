@@ -12,7 +12,7 @@ import re
 import string
 import tqdm
 import argparse
-from prompts.prompt_template_persona2 import persona_generate, persona_generate_simple, persona_diff_instruct_generate, persona_diff_instruct_generate_simple, persona_diff_instruct_generate_re
+from prompts.prompt_template_persona2 import persona_generate, persona_generate_simple, persona_diff_instruct_generate, persona_diff_instruct_generate_simple, persona_diff_instruct_generate_re, persona_diff_instruct_generate_wo_question
 from prompts.score_template import score_template
 # os.environ["CUDA_VISIBLE_DEVICES"] = "3"
 model_id = "/data1/dyf/model/Mistral-7B-Instruct-v0.3/"
@@ -264,14 +264,14 @@ def UCB_sample_record(seed_tasks, batch_length, roundi, is_vllm, model, sampling
     respondent_doc = []
     test_log = []
     wrong_log = []
-    for tmp in seed_tasks:
-        documents.append(tmp['conversations'][0])
-    for tmp in seed_tasks:
-        questioner_doc.append(tmp['questioner'])
-    for tmp in seed_tasks:
-        respondent_doc.append(tmp['respondent'])
-    question_embedding = torch.load('/home/dyf/data_generate/persona-instruct/embedding/question_embedding.pt')
-    questioner_embedding = torch.load('/home/dyf/data_generate/persona-instruct/embedding/questioner_embedding.pt')
+    # for tmp in seed_tasks:
+    #     documents.append(tmp['conversations'][0])
+    # for tmp in seed_tasks:
+    #     questioner_doc.append(tmp['questioner'])
+    # for tmp in seed_tasks:
+    #     respondent_doc.append(tmp['respondent'])
+    # question_embedding = torch.load('/home/dyf/data_generate/persona-instruct/embedding/question_embedding.pt')
+    # questioner_embedding = torch.load('/home/dyf/data_generate/persona-instruct/embedding/questioner_embedding.pt')
     if is_vllm == True:
         # chat_formatting_function = dynamic_import_function("templates.create_prompt_with_huggingface_tokenizer_template")
         # model = vllm.LLM(
@@ -329,29 +329,29 @@ def UCB_sample_record(seed_tasks, batch_length, roundi, is_vllm, model, sampling
             #如果达标了才select_time + 1，那么就会一直重复选这k个
             for temp in task:
                 temp['select_time'] = temp['select_time'] + 1
-            prompt = persona_diff_instruct_generate_re.format(questioner1=task[0]['questioner'], questioner2=task[1]['questioner'], questioner3=task[2]['questioner'], questioner4=task[3]['questioner'], respondent1=task[0]['respondent'], respondent2=task[1]['respondent'], respondent3=task[2]['respondent'], respondent4=task[3]['respondent'], question1=task[0]['conversations'][0], question2=task[1]['conversations'][0], question3=task[2]['conversations'][0], question4=task[3]['conversations'][0])
+            prompt = persona_diff_instruct_generate_wo_question.format(questioner1=task[0]['questioner'], questioner2=task[1]['questioner'], questioner3=task[2]['questioner'], questioner4=task[3]['questioner'], respondent1=task[0]['respondent'], respondent2=task[1]['respondent'], respondent3=task[2]['respondent'], respondent4=task[3]['respondent'], question1=task[0]['conversations'][0], question2=task[1]['conversations'][0], question3=task[2]['conversations'][0], question4=task[3]['conversations'][0])
             # prompt = persona_diff_instruct_generate_simple.format(questioner1=task[0]['questioner'], questioner2=task[1]['questioner'], questioner3=task[2]['questioner'], question1=task[0]['conversations'][0], question2=task[1]['conversations'][0], question3=task[2]['conversations'][0])
             et = 0
             while True:
-                if et == 5:
-                    # 这里few-shot的例子是乱码，需要移除
-                    # set_task = set(task)
-                    # seed_tasks = [item for item in seed_tasks if item not in task]
-                    break
+                # if et == 1:
+                #     # 这里few-shot的例子是乱码，需要移除
+                #     # set_task = set(task)
+                #     # seed_tasks = [item for item in seed_tasks if item not in task]
+                #     break
                 result = use_vllm([prompt], model, sampling_params, chat_formatting_function)
                 try:
-                    question = result.split('[New Question]: ')[1].split('[New Respondent]: ')[0].strip()
+                    question = result.split('[New Question]: ')[1].split('[Collaborative Relationship]: ')[0].strip('"')
                     # if len(question.split('\n')) >= 2:
                     #     question = question.split('\n')[0]
                     # questioner = result.split('### questioner:\n')[1].split('\n### respondent:\n')[0].strip()
-                    questioner = result.split('[New Questioner]: ')[1].split('[New Question]: ')[0].strip()
-                    respondent = result.split('[New Respondent]: ')[1].split('[Collaborative Relationship]: ')[0].strip()
-                    Relationship = result.split('[Collaborative Relationship]: ')[1]
+                    questioner = result.split('[New Questioner]: ')[1].split('[New Question]: ')[0].strip('"')
+                    # respondent = result.split('[New Respondent]: ')[1].split('[Collaborative Relationship]: ')[0].strip('"')
+                    # Relationship = result.split('[Collaborative Relationship]: ')[1]
                     break
                 except:
                     et += 1
-                    continue
-            if et == 5:
+                    break
+            if et == 1:
                 continue
                 # if len(result.split('[New Question]: ')[1]) >= 2:
                 #     question = result.split('[New Question]: ')[1]
@@ -363,19 +363,19 @@ def UCB_sample_record(seed_tasks, batch_length, roundi, is_vllm, model, sampling
             #     pdb.set_trace()
             print(prompt)
             print(result)
-            f1, _ = embedding_filter(question, question_embedding)
-            f2, _ = embedding_filter(questioner, questioner_embedding)
-            if filter_output(documents, question) and filter_output(questioner_doc, questioner) and f1 and f2: # and filter_output(respondent_doc, respondent): # and quality_score_vllm(question, model, sampling_params, chat_formatting_function):
-                _, question_embedding = embedding_filter(question, question_embedding)
-                _, questioner_embedding  = embedding_filter(questioner, questioner_embedding)
+            # f1, _ = embedding_filter(question, question_embedding)
+            # f2, _ = embedding_filter(questioner, questioner_embedding)
+            if True: # filter_output(documents, question) and filter_output(questioner_doc, questioner) and f1 and f2: # and filter_output(respondent_doc, respondent): # and quality_score_vllm(question, model, sampling_params, chat_formatting_function):
+                # _, question_embedding = embedding_filter(question, question_embedding)
+                # _, questioner_embedding  = embedding_filter(questioner, questioner_embedding)
                 documents.append(question)
                 questioner_doc.append(questioner)
                 respondent_doc.append(respondent)
                 print(result)
                 t = {}
                 t['questioner'] = questioner
-                t['respondent'] = respondent
-                t['Relationship'] = respondent
+                # t['respondent'] = respondent
+                # t['Relationship'] = respondent
                 t['conversations'] = []
                 t['conversations'].append(question)
                 t['select_time'] = 1
@@ -490,9 +490,9 @@ def main_diff(roundi, seed_tasks, is_vllm, batch_length, model, sampling_params,
     # args = parse_args()
     # if args.use_clf_seed_tasks_only:
     #     seed_tasks = [t for t in seed_tasks if t["is_classification"]]
-    if roundi == 0:
-        for t in seed_tasks:
-            t['select_time'] = 1
+    # if roundi == 0:
+    #     for t in seed_tasks:
+    #         t['select_time'] = 1
     # print(args)
     # print(args.use_vllm)
     # os.makedirs(args.batch_dir, exist_ok=True)

@@ -128,7 +128,7 @@ if __name__ == "__main__":
         )
         
         sampling_params = vllm.SamplingParams(
-            temperature=0.3,  # greedy decoding
+            temperature=0.0,  # greedy decoding
             # top_p=0.9,
             max_tokens=5000,
             # stop=args.additional_stop_sequence,
@@ -140,9 +140,9 @@ if __name__ == "__main__":
         for idx in tqdm(range(len(seed_tasks))): #len(seed_tasks)
             dialogue = seed_tasks[idx]['conversations'][0]
             # dialogue = seed_tasks[idx]['conversations'] # + '\n' + seed_tasks[idx]['instances'][0]['input'] + '\n' + seed_tasks[idx]['instances'][0]['output']
-            prompt = persona_generate.format(dialogue=dialogue)
+            prompt = persona_generate.format(dialogue=dialogue).strip()
             # while True:
-            result = use_vllm([prompt], model, sampling_params, chat_formatting_function)
+            result = use_vllm([prompt], model, sampling_params, chat_formatting_function).strip()
             try:
                 if len(result.split('### text:\n')) >= 2 and '### questioner:\n' not in result:
                     questioner = result.split('### text:\n')[1].split('\n### respondent:\n')[0].strip()

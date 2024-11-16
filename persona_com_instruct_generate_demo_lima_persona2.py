@@ -297,26 +297,33 @@ def random_sample(seed_tasks, roundi, is_vllm, model, sampling_params, chat_form
                 questioner = seed_tasks[idx]['questioner']
             except:
                 pdb.set_trace()
-            respondent = seed_tasks[idx]['respondent']
+            # try:
+            #     respondent = seed_tasks[idx]['respondent']
+            # except:
+            #     pdb.set_trace()
+            # respondent = seed_tasks[idx]['respondent']
             question = seed_tasks[idx]['conversations'][0]
             # dialogue = seed_tasks[idx]['instruction'] # + '\n' + seed_tasks[idx]['instances'][0]['input'] + '\n' + seed_tasks[idx]['instances'][0]['output']
-            prompt = persona_com_instruct_generate_rewrite.format(questioner=questioner, respondent=respondent, question=question)
-            t = 0
+            prompt = persona_com_instruct_generate_rewrite.format(questioner=questioner, question=question)
+            te = False
             while True:
-                if t == 5:
-                    # 这里few-shot的例子是乱码，需要移除
-                    seed_tasks.pop(idx)
-                    break
                 result = use_vllm([prompt], model, sampling_params, chat_formatting_function)
                 try:
-                    question = result.split('[New Question]: ')[1].split('[New Respondent]: ')[0].strip()
-                    questioner = result.split('[New Questioner]: ')[1].split('[New Question]: ')[0].strip()
-                    respondent = result.split('[New Respondent]: ')[1].split('[Reason]: ')[0].strip()
+                    if '[Reason]: ' in result:
+                        question = result.split('[New Question]: ')[1].split('[Reason]: ')[0].strip('"')
+                        questioner = result.split('[New Questioner]: ')[1].split('[New Question]: ')[0].strip('"')
+                    elif '\nReason:' in result:
+                        question = result.split('[New Question]: ')[1].split('\n\nReason:')[0].strip('"')
+                        questioner = result.split('[New Questioner]: ')[1].split('[New Question]: ')[0].strip('"')
+                    else:
+                        te = True
+                        break
+                    # respondent = result.split('[New Respondent]: ')[1].split('[Reason]: ')[0].strip('"')
                     break
                 except:
-                    t += 1
-                    continue
-            if t == 5:
+                    te = True
+                    break
+            if te:
                 continue
                 # if len(result.split('[New Question]: ')) >= 2:
                 #     question = result.split('[New Question]: ')[1]
@@ -329,7 +336,7 @@ def random_sample(seed_tasks, roundi, is_vllm, model, sampling_params, chat_form
                 print(result)
                 t = {}
                 t['questioner'] = questioner
-                t['respondent'] = respondent
+                # t['respondent'] = respondent
                 t['conversations'] = []
                 t['conversations'].append(question)
                 t['select_time'] = 1
@@ -341,8 +348,8 @@ def random_sample(seed_tasks, roundi, is_vllm, model, sampling_params, chat_form
                 output_log_jsonl(os.path.join('/home/dyf/data_generate/persona-instruct/data/lima/epoch/com/', f"com_new_instruct_round_{roundi}.jsonl"), all_logs) 
                 # output log at each iteration
                 # merge_log = seed_tasks + all_logs
-                if roundi == 3:
-                    if len(merge_log) >= 10000:
+                if roundi == 1:
+                    if len(all_logs) >= 12000:
                         break
                 # output_log_jsonl(os.path.join("/home/dyf/data_generate/persona-instruct/data/lima/merged/", f"com_merged_instruct_round_{roundi}.jsonl"), merge_log)
             else:
@@ -387,7 +394,7 @@ def random_sample(seed_tasks, roundi, is_vllm, model, sampling_params, chat_form
                 #     if len(result.split('[New Questioner]: ')) >= 2 and len(result.split('[New Respondent]: ')) >= 2:
                 #         if len(result.split('[New Questioner]: ')[1].split('\n')) >= 2 and len(result.split('[New Respondent]: ')[1].split('\n')) >= 2:
                 #             break
-            if filter_output(documents, question) and quality_score(question, model):
+            if quality_score(question, model): # filter_output(documents, question) and 
                 documents.append(question)
                 print(tokenizer.decode(outputs[0][len(inputs[0]):], skip_special_tokens=True))
                 t = {}
