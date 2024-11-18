@@ -104,13 +104,15 @@ Output:
 # [Original Question]: {question}
 # [Respondent]: {respondent}
 # Output:
+# 1. The new questioner should differ from the previous questioner and relate to the context of the new question.
 
 persona_com_instruct_generate_rewrite = '''
 Please generate one new questioner based on the existing questioner and the given question. Then, using the new questioner, generate a new, high quality and more challenging version of the question.
 ### Important:
 1. The new questioner should differ from the previous questioner and relate to the context of the new question.
-2. You need to explain why the new question is more challenging.
-3. Don't provide a solution or answer to the new question.
+2. When generating new questions, I want you to play the role of the new questioner and generate a new question that you are most likely to say|listen|write|read.
+3. You need to explain why the new question is more challenging.
+4. Don't provide a solution or answer to the new question.
 ### Format:
 [Questioner]: Here is the existing description of questioner.
 [Original Question]: Here is the original question.
@@ -328,7 +330,8 @@ Example 2:
 [question]: {question2}
 ### Important:
 1. The new question you generate and the example questions are independent of each other.
-2. Don't provide a solution or answer to the query.
+2. Ensure that the new question you generate is of high quality.
+3. Don't provide a solution or answer to the query.
 
 Your output should be as follows:
 [New Question]: Here is the new question.
@@ -339,24 +342,55 @@ Your output should be as follows:
 # Example 4:
 # [question]: {question4}
 
+# The new questioners and questions you generate should be able to be used to extend the capabilities of large language models.
+# 7. The new questioners and questions you generate should be able to be used to extend the capabilities of large language models.
 persona_diff_instruct_generate_wo_question='''
 Generate a new questioner and a new query based on the following examples.
 ### Example:
 Example 1:
 [questioner]: {questioner1}
+[question]: {question1}
 Example 2:
 [questioner]: {questioner2}
+[question]: {question2}
 ### Important:
 1. The new questioner and the Example questioners are in different domains.
-2. The new questioner must have a collaborative relationship with both Example 1 and Example 2 questioners.
-3. You need to explain the collaborative relationship between the new questioner and the example questioners.
-4. The new questioner should avoid using abbreviations like "Example 1" or similar placeholder references.
-5. Don't provide a solution or answer to the new query.
+2. The new questioner is someone who, in some scenarios, may have a collaborative relationship with the Example 1 and Example 2 questioners.
+3. You need to explain the possible collaborative relationship between the new questioner and the Example questioners.
+4. You can't refer to the Example questioners in the description of the new questioner, the description of the new questioner should be more general.
+5. The new question you generate and the example questions are independent of each other.
+6. When generating the new question, I want you to play the role of the new questioner and generate a new question that you are most likely to say|listen|write|read.
+7. Ensure that the new question you generate is of high quality.
+8. Don't provide a solution or answer to the new query.
+
+Your output should be as follows:
+[New Questioner]: Here is the description of the new questioner.
+[New Question]: Here is the new question.
+[Collaborative Relationship]: Here is the possible collaborative relationship between the new questioner and the example questioners.
+'''
+
+persona_diff_instruct_generate_reverse='''
+Generate a new questioner and a new query based on the following examples.
+### Example:
+Example 1:
+[questioner]: {questioner1}
+[question]: {question1}
+Example 2:
+[questioner]: {questioner2}
+[question]: {question2}
+### Important:
+1. The new questioner and the Example questioners are in different domains.
+2. The new questioner is someone who, in some scenarios, may have a collaborative relationship with the Example 1 and Example 2 questioners.
+3. You need to explain the possible collaborative relationship between the new questioner and the Example questioners.
+4. You can't refer to the Example questioners in the description of the new questioner, the description of the new questioner should be more general.
+5. The new question you generate and the example questions are independent of each other.
+6. When generating the new question, I want you to play the role of the new questioner and generate a question that you are most likely to say|listen|write|read.
+7. Don't provide a solution or answer to the new query.
 
 Your output should be as follows:
 [New Questioner]: Here is the description of new questioner.
 [New Question]: Here is the new question.
-[Collaborative Relationship]: Here is the collaborative relationship between the new questioner and the example questioners.
+[Collaborative Relationship]: Here is the possible collaborative relationship between the new questioner and the example questioners.
 '''
 
 instruct_generate = '''
@@ -387,27 +421,33 @@ Your answer should be as follows:
 resonpdant_generate = '''
 I will give you a pair of questioner and question in a dataset, and I am tagging this dataset with the best fit respondant and a detailed description of the respondant, please help me generate a high quality example for this dataset.
 
-For this task you will generate a good length answer using your best helpfulness and wisdom, and No need to include verbose or extraneous information.
-
 ### questioner:
 {question}
 ### question:
 {questioner}
 
-Your answer should be as follows:
+Your output should be as follows:
 ### respondant:
 <a detailed description of the respondant>
 '''
 
 answer_generate = '''
 Here is an instruction that describes a task, write a response that appropriately completes the request.
+For this task you will generate a good length answer using your best helpfulness and wisdom, and No need to include verbose or extraneous information.
+
 ### Instruction:
 {instruction}
 ### Response:
 '''
 
 answer_generate_persona = '''
-Here is an instruction that describes a task, I want you act as {respondent}, write a response that appropriately completes the request.
+Here is an instruction that describes a task, I want you act as:
+### 
+{respondent}
+###
+write a response that appropriately completes the request.
+For this task you will generate a good length answer using your best helpfulness and wisdom, and No need to include verbose or extraneous information.
+
 ### Instruction:
 {instruction}
 ### Response:

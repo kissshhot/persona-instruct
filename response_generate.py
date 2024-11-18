@@ -11,6 +11,7 @@ from prompts.prompt_template import answer_generate
 import vllm
 from importlib import import_module
 import torch
+import copy
 from tqdm import tqdm
 # rejection sampling
 # 接下来，我们设定一些标准，比如：
@@ -92,9 +93,12 @@ def use_vllm(prompts, model, sampling_params, chat_formatting_function):
     return outputs[0]
 
 
-def single_sample(seed_tasks, chat_formatting_function, model, sampling_params):
+def response_generate_main(batch_dir, seed_tasks, chat_formatting_function, model, sampling_params):
     all_logs = []
-    for t in tqdm(seed_tasks):
+    # import copy
+    # original_list = [[1, 2, 3], [4, 5, 6]]
+    copied_list = copy.deepcopy(seed_tasks)
+    for t in tqdm(copied_list):
         # instruction = t['conversations'][0]
         # prompt = persona_com_instruct_generate_rewrite.format(questioner=questioner, question=question)
         prompt = t['conversations'][0] # answer_generate.format(instruction=instruction).strip()
@@ -120,30 +124,54 @@ def single_sample(seed_tasks, chat_formatting_function, model, sampling_params):
         # answer = result
         t['conversations'].append(result)
         all_logs.append(t)
-        if len(all_logs) >= 10000:
-            break
-        output_log_jsonl(os.path.join("/home/dyf/data_generate/persona-instruct/data/lima/wo_persona/", f"final_data.jsonl"), all_logs) 
+        # if len(all_logs) >= 10000:
+        #     break
+        output_log_jsonl(os.path.join(batch_dir, "raw_response.jsonl"), all_logs) 
 
-if __name__ == "__main__":
-    args = parse_args()
-    seed_tasks = [json.loads(l) for l in open(args.seed_tasks_path, "r")]
-    chat_formatting_function = dynamic_import_function("templates.create_prompt_with_huggingface_tokenizer_template")
-    model = vllm.LLM(
-        model=model_id,
-        tokenizer=model_id,
-        tokenizer_mode="auto",
-        tensor_parallel_size=torch.cuda.device_count(),
-        tokenizer_revision=None, 
-        revision=None,
-    )
+# def response_generate_main(batch_dir, seed_tasks, chat_formatting_function, model, sampling_params):
+#     # args = parse_args()
+#     # seed_tasks = [json.loads(l) for l in open(args.seed_tasks_path, "r")]
+#     # chat_formatting_function = dynamic_import_function("templates.create_prompt_with_huggingface_tokenizer_template")
+#     # model = vllm.LLM(
+#     #     model=model_id,
+#     #     tokenizer=model_id,
+#     #     tokenizer_mode="auto",
+#     #     tensor_parallel_size=torch.cuda.device_count(),
+#     #     tokenizer_revision=None, 
+#     #     revision=None,
+#     # )
     
-    sampling_params = vllm.SamplingParams(
-        temperature=0.0,  # greedy decoding
-        max_tokens=5000,
-        # stop=args.additional_stop_sequence,
-        # --additional_stop_sequence',
-        # type=str,
-        # nargs="+",
-        # default=[],
-    )
-    single_sample(seed_tasks, chat_formatting_function, model, sampling_params)
+#     # sampling_params = vllm.SamplingParams(
+#     #     temperature=0.0,  # greedy decoding
+#     #     max_tokens=5000,
+#     #     # stop=args.additional_stop_sequence,
+#     #     # --additional_stop_sequence',
+#     #     # type=str,
+#     #     # nargs="+",
+#     #     # default=[],
+#     # )
+#     single_sample(batch_dir, seed_tasks, chat_formatting_function, model, sampling_params)
+
+# if __name__ == "__main__":
+#     args = parse_args()
+#     seed_tasks = [json.loads(l) for l in open(args.seed_tasks_path, "r")]
+#     chat_formatting_function = dynamic_import_function("templates.create_prompt_with_huggingface_tokenizer_template")
+#     model = vllm.LLM(
+#         model=model_id,
+#         tokenizer=model_id,
+#         tokenizer_mode="auto",
+#         tensor_parallel_size=torch.cuda.device_count(),
+#         tokenizer_revision=None, 
+#         revision=None,
+#     )
+    
+#     sampling_params = vllm.SamplingParams(
+#         temperature=0.0,  # greedy decoding
+#         max_tokens=5000,
+#         # stop=args.additional_stop_sequence,
+#         # --additional_stop_sequence',
+#         # type=str,
+#         # nargs="+",
+#         # default=[],
+#     )
+#     single_sample(seed_tasks, chat_formatting_function, model, sampling_params)

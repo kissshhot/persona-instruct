@@ -2,11 +2,15 @@ import argparse
 import json
 import os
 from persona_com_instruct_generate_demo_lima_persona2 import main_com
-from persona_diff_instruct_generate_demo_lima_persona2 import main_diff
+from persona_diff_instruct_generate_demo_lima_persona2_filter import main_diff
+from persona_respondant_generate_lima_persona2 import respondant_generate_main
+from response_generate import response_generate_main
+from response_generate_persona import persona_response_generate_main
+from filter import embedding_filter_main
 import vllm
 from importlib import import_module
 import torch
-os.environ["CUDA_VISIBLE_DEVICES"] = "4,5,6,7"
+# os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
 # from persona_diff_instruct_generate_demo_lima_persona2 import main_diff
 model_id = "/data1/dyf/model/Mistral-7B-Instruct-v0.3/"
 
@@ -84,6 +88,7 @@ if __name__ == "__main__":
     args.is_vllm = True
     all_logs = []
     roundi = args.roundi
+    batch_dir = args.batch_dir
     seed_tasks = [json.loads(l) for l in open(args.seed_tasks_path, "r")]
     # task2 = [json.loads(l) for l in open('/home/dyf/data_generate/persona-instruct/data/lima/epoch/diff/test.jsonl', "r")]
     seed_tasks = seed_tasks
@@ -115,8 +120,14 @@ if __name__ == "__main__":
 
 
     seed_tasks, documents = main_diff(roundi, seed_tasks, args.is_vllm, args.batch_length, model, sampling_params, chat_formatting_function)
-    # for roundi in range(2):
+    # seed_tasks = embedding_filter_main(seed_tasks, args.batch_length)
+    for roundi in range(2):
     # # roundi = 1
-    #     seed_tasks = main_com(roundi, seed_tasks, args.is_vllm, model, sampling_params, chat_formatting_function, documents)
+        seed_tasks = main_com(roundi, seed_tasks, args.is_vllm, model, sampling_params, chat_formatting_function, documents)
 
-    # output_log_jsonl(os.path.join("/home/dyf/data_generate/persona-instruct/data/lima/final/", f"final.jsonl"), seed_tasks)
+    output_log_jsonl(os.path.join("/home/dyf/data_generate/persona-instruct/data/lima/final/", f"final.jsonl"), seed_tasks)
+
+    response_generate_main(batch_dir, seed_tasks, model, sampling_params, chat_formatting_function)
+    seed_tasks = respondant_generate_main(seed_tasks, model, sampling_params, chat_formatting_function)
+    persona_response_generate_main(batch_dir, seed_tasks, model, sampling_params, chat_formatting_function)
+

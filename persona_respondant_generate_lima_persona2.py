@@ -106,105 +106,137 @@ def use_vllm(prompts, model, sampling_params, chat_formatting_function):
     outputs = [it.outputs[0].text for it in outputs]
     return outputs[0]
 
-if __name__ == "__main__":
-    args = parse_args()
+def respondant_generate_main(seed_tasks, model, sampling_params, chat_formatting_function):
+    # all_logs = []
+    for idx in tqdm(range(len(seed_tasks))): #len(seed_tasks)
+        questioner = seed_tasks[idx]['questioner']
+        question = seed_tasks[idx]['conversations'][0]
+        # dialogue = seed_tasks[idx]['conversations'] # + '\n' + seed_tasks[idx]['instances'][0]['input'] + '\n' + seed_tasks[idx]['instances'][0]['output']
+        prompt = resonpdant_generate.format(questioner=questioner, question=question).strip()
+        # while True:
+        result = use_vllm([prompt], model, sampling_params, chat_formatting_function).strip()
+        try:
+            if '### respondent:\n' in result:
+                respondent = result.split('### respondent:')[1].strip()
+            else:
+                respondent = result.split('respondent:')[1].strip()
+            # if len(respondent.split('\n')) >= 2:
+            #     respondent = respondent.split('\n')[0]
+            # break
+        except:
+            #pdb.set_trace()
+            continue
+        print(result)
+        # t = seed_tasks[idx]
+        seed_tasks['respondent'] = respondent
+        # all_logs.append(t)
+        print(respondent)
+        # if len(all_logs) >=2:
+        #     if all_logs[-1] == all_logs[-2]:
+        #         pdb.set_trace()
+        # output log at each iteration
+        output_log_jsonl(os.path.join("/home/dyf/data_generate/persona-instruct/data/lima/respondant_add/", "respondant_add_w_vllm.jsonl"), seed_tasks)
+        return seed_tasks
 
-    seed_tasks = [json.loads(l) for l in open(args.seed_tasks_path, "r")]
-    if args.use_clf_seed_tasks_only:
-        seed_tasks = [t for t in seed_tasks if t["is_classification"]]
-    os.makedirs(args.batch_dir, exist_ok=True)
+# if __name__ == "__main__":
+    # args = parse_args()
 
-    persona_add = []
-    all_logs=[]
-    if args.use_vllm == True:
-        chat_formatting_function = dynamic_import_function("templates.create_prompt_with_huggingface_tokenizer_template")
-        model = vllm.LLM(
-            model=model_id,
-            tokenizer=model_id,
-            tokenizer_mode="auto",
-            tensor_parallel_size=torch.cuda.device_count(),
-            tokenizer_revision=None, 
-            revision=None,
-        )
+    # seed_tasks = [json.loads(l) for l in open(args.seed_tasks_path, "r")]
+    # if args.use_clf_seed_tasks_only:
+    #     seed_tasks = [t for t in seed_tasks if t["is_classification"]]
+    # os.makedirs(args.batch_dir, exist_ok=True)
+
+    # persona_add = []
+    # all_logs=[]
+    # if args.use_vllm == True:
+    #     chat_formatting_function = dynamic_import_function("templates.create_prompt_with_huggingface_tokenizer_template")
+    #     model = vllm.LLM(
+    #         model=model_id,
+    #         tokenizer=model_id,
+    #         tokenizer_mode="auto",
+    #         tensor_parallel_size=torch.cuda.device_count(),
+    #         tokenizer_revision=None, 
+    #         revision=None,
+    #     )
         
-        sampling_params = vllm.SamplingParams(
-            temperature=0.0,  # greedy decoding
-            # top_p=0.9,
-            max_tokens=5000,
-            # stop=args.additional_stop_sequence,
-            # --additional_stop_sequence',
-            # type=str,
-            # nargs="+",
-            # default=[],
-        )
-        for idx in tqdm(range(len(seed_tasks))): #len(seed_tasks)
-            questioner = seed_tasks[idx]['questioner']
-            question = seed_tasks[idx]['conversations'][0]
-            # dialogue = seed_tasks[idx]['conversations'] # + '\n' + seed_tasks[idx]['instances'][0]['input'] + '\n' + seed_tasks[idx]['instances'][0]['output']
-            prompt = resonpdant_generate.format(questioner=questioner, question=question).strip()
-            # while True:
-            result = use_vllm([prompt], model, sampling_params, chat_formatting_function).strip()
-            try:
-                respondent = result.split('### respondent:\n')[1].strip()
-                # if len(respondent.split('\n')) >= 2:
-                #     respondent = respondent.split('\n')[0]
-                # break
-            except:
-                #pdb.set_trace()
-                continue
-            print(result)
-            t = seed_tasks[idx]
-            t['respondent'] = respondent
-            all_logs.append(t)
-            print(t['respondent'])
-            if len(all_logs) >=2:
-                if all_logs[-1] == all_logs[-2]:
-                    pdb.set_trace()
-            # output log at each iteration
-            output_log_jsonl(os.path.join(args.batch_dir, "respondant_add_w_vllm.jsonl"), all_logs)
-    else:
-        # tokenizer = AutoTokenizer.from_pretrained(model_id)
-        model = AutoModelForCausalLM.from_pretrained(model_id, device_map="auto")
-        for idx in tqdm(range(len(seed_tasks))): #len(seed_tasks)
-            # dialogue = ''
-            # for tx in seed_tasks[idx]['conversations']:
-            #     dialogue += tx + '\n'
-            dialogue = seed_tasks[idx]['conversations'][0]
-            # dialogue = seed_tasks[idx]['conversations'] # + '\n' + seed_tasks[idx]['instances'][0]['input'] + '\n' + seed_tasks[idx]['instances'][0]['output']
-            prompt = persona_generate.format(dialogue=dialogue)
-            conversation = [{"role": "user", "content": prompt}]
-            # tools = [get_current_weather]
+    #     sampling_params = vllm.SamplingParams(
+    #         temperature=0.0,  # greedy decoding
+    #         # top_p=0.9,
+    #         max_tokens=5000,
+    #         # stop=args.additional_stop_sequence,
+    #         # --additional_stop_sequence',
+    #         # type=str,
+    #         # nargs="+",
+    #         # default=[],
+    #     )
+        # for idx in tqdm(range(len(seed_tasks))): #len(seed_tasks)
+        #     questioner = seed_tasks[idx]['questioner']
+        #     question = seed_tasks[idx]['conversations'][0]
+        #     # dialogue = seed_tasks[idx]['conversations'] # + '\n' + seed_tasks[idx]['instances'][0]['input'] + '\n' + seed_tasks[idx]['instances'][0]['output']
+        #     prompt = resonpdant_generate.format(questioner=questioner, question=question).strip()
+        #     # while True:
+        #     result = use_vllm([prompt], model, sampling_params, chat_formatting_function).strip()
+        #     try:
+        #         respondent = result.split('### respondent:\n')[1].strip()
+        #         # if len(respondent.split('\n')) >= 2:
+        #         #     respondent = respondent.split('\n')[0]
+        #         # break
+        #     except:
+        #         #pdb.set_trace()
+        #         continue
+        #     print(result)
+        #     t = seed_tasks[idx]
+        #     t['respondent'] = respondent
+        #     all_logs.append(t)
+        #     print(t['respondent'])
+        #     if len(all_logs) >=2:
+        #         if all_logs[-1] == all_logs[-2]:
+        #             pdb.set_trace()
+        #     # output log at each iteration
+        #     output_log_jsonl(os.path.join(args.batch_dir, "respondant_add_w_vllm.jsonl"), all_logs)
+    # else:
+    #     # tokenizer = AutoTokenizer.from_pretrained(model_id)
+    #     model = AutoModelForCausalLM.from_pretrained(model_id, device_map="auto")
+    #     for idx in tqdm(range(len(seed_tasks))): #len(seed_tasks)
+    #         # dialogue = ''
+    #         # for tx in seed_tasks[idx]['conversations']:
+    #         #     dialogue += tx + '\n'
+    #         dialogue = seed_tasks[idx]['conversations'][0]
+    #         # dialogue = seed_tasks[idx]['conversations'] # + '\n' + seed_tasks[idx]['instances'][0]['input'] + '\n' + seed_tasks[idx]['instances'][0]['output']
+    #         prompt = persona_generate.format(dialogue=dialogue)
+    #         conversation = [{"role": "user", "content": prompt}]
+    #         # tools = [get_current_weather]
 
 
-            # format and tokenize the tool use prompt 
-            inputs = tokenizer.apply_chat_template(
-                        conversation,
-                        add_generation_prompt=True,
-                        # return_dict=True,
-                        return_tensors="pt",
-            )
+    #         # format and tokenize the tool use prompt 
+    #         inputs = tokenizer.apply_chat_template(
+    #                     conversation,
+    #                     add_generation_prompt=True,
+    #                     # return_dict=True,
+    #                     return_tensors="pt",
+    #         )
 
-            inputs = inputs.to('cuda')
-            while True:
-                outputs = model.generate(inputs, max_new_tokens=5000, do_sample=True, temperature=0.7, top_p=0.9)
-                result = tokenizer.decode(outputs[0][len(inputs[0]):], skip_special_tokens=True)
-                try:
-                    questioner = result.split('### questioner:\n')[1].split('\n')[0]
-                    respondent = result.split('### respondent:\n')[1]
-                    if len(respondent.split('\n')) >= 2:
-                        respondent = respondent.split('\n')[0]
-                    break
-                except:
-                    pdb.set_trace()
-                    continue
-            print(result)
-            t = seed_tasks[idx]
-            t['questioner'] = questioner
-            t['respondent'] = respondent
-            all_logs.append(t)
-            print(t['questioner'])
-            print(t['respondent'])
-            if all_logs[-1] == all_logs[-2]:
-                pdb.set_trace()
-            # output log at each iteration
-            output_log_jsonl(os.path.join(args.batch_dir, "persona_add_lima_persona2_wo_vllm.jsonl"), all_logs)
+    #         inputs = inputs.to('cuda')
+    #         while True:
+    #             outputs = model.generate(inputs, max_new_tokens=5000, do_sample=True, temperature=0.7, top_p=0.9)
+    #             result = tokenizer.decode(outputs[0][len(inputs[0]):], skip_special_tokens=True)
+    #             try:
+    #                 questioner = result.split('### questioner:\n')[1].split('\n')[0]
+    #                 respondent = result.split('### respondent:\n')[1]
+    #                 if len(respondent.split('\n')) >= 2:
+    #                     respondent = respondent.split('\n')[0]
+    #                 break
+    #             except:
+    #                 pdb.set_trace()
+    #                 continue
+    #         print(result)
+    #         t = seed_tasks[idx]
+    #         t['questioner'] = questioner
+    #         t['respondent'] = respondent
+    #         all_logs.append(t)
+    #         print(t['questioner'])
+    #         print(t['respondent'])
+    #         if all_logs[-1] == all_logs[-2]:
+    #             pdb.set_trace()
+    #         # output log at each iteration
+    #         output_log_jsonl(os.path.join(args.batch_dir, "persona_add_lima_persona2_wo_vllm.jsonl"), all_logs)

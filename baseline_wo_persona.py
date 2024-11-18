@@ -20,6 +20,7 @@ tokenizer = AutoTokenizer.from_pretrained(model_id)
 tokenizer_embedding = AutoTokenizer.from_pretrained('BAAI/bge-small-en-v1.5')
 model_embedding = AutoModel.from_pretrained('BAAI/bge-small-en-v1.5') # , device_map={"": "cuda"}
 model_embedding.eval()
+from response_generate import response_generate_main
 # model = AutoModelForCausalLM.from_pretrained(model_id, device_map="auto")
 
 def output_log_jsonl(log_file, all_logs):
@@ -307,6 +308,7 @@ def UCB_sample_record(seed_tasks, batch_length, roundi, is_vllm, model, sampling
     all_logs=[]
     documents = []
     questioner_doc = []
+    raw_logs = []
     # respondent_doc = []
     test_log = []
     wrong_log = []
@@ -409,6 +411,11 @@ def UCB_sample_record(seed_tasks, batch_length, roundi, is_vllm, model, sampling
             #     pdb.set_trace()
             print(prompt)
             print(result)
+            t = {}
+            t['conversations'] = []
+            t['conversations'].append(question)
+            t['select_time'] = 1
+            raw_logs.append(t)
             f1, _ = embedding_filter(question, question_embedding)
             # filter_output(documents, question) and filter_output(questioner_doc, questioner) and 
             if f1: # and filter_output(respondent_doc, respondent): # and quality_score_vllm(question, model, sampling_params, chat_formatting_function):
@@ -416,16 +423,16 @@ def UCB_sample_record(seed_tasks, batch_length, roundi, is_vllm, model, sampling
                 documents.append(question)
                 # respondent_doc.append(respondent)
                 print(result)
-                t = {}
-                t['conversations'] = []
-                t['conversations'].append(question)
-                t['select_time'] = 1
+                # t = {}
+                # t['conversations'] = []
+                # t['conversations'].append(question)
+                # t['select_time'] = 1
                 if idx <= 1000:
                     wrong_log = wrong_log + task[0:2] + [t]
                 all_logs.append(t)
                 # seed_tasks.append(t)
                 # output log at each iteration
-                if len(all_logs) >= 12000:
+                if len(all_logs) >= 1030:
                     break
                 output_log_jsonl(os.path.join('/home/dyf/data_generate/persona-instruct/data/lima/wo_persona/', f"diff_new_instruct_{batch_length}_person2_round_{roundi}.jsonl"), all_logs)
                 # output log merge
@@ -441,6 +448,7 @@ def UCB_sample_record(seed_tasks, batch_length, roundi, is_vllm, model, sampling
                 output_log_jsonl(os.path.join("/home/dyf/data_generate/persona-instruct/data/lima/wo_persona/", f"bool_log_round_{roundi}.jsonl"), test_log)
                 continue
         output_log_jsonl(os.path.join("/home/dyf/data_generate/persona-instruct/data/lima/wo_persona/", f"diff_merged_instruct_{batch_length}_person2_round_{roundi}.jsonl"), seed_tasks + all_logs)
+        output_log_jsonl(os.path.join("/home/dyf/data_generate/persona-instruct/data/lima/wo_persona/", f"diff_raw_instruct_{batch_length}_person2_round_{roundi}.jsonl"), raw_logs)
     else:
         model = AutoModelForCausalLM.from_pretrained(model_id, device_map="auto")
         for idx in range(batch_length): #len(seed_tasks)
@@ -597,6 +605,7 @@ def parse_args():
 if __name__ == "__main__":
     args = parse_args()
     roundi = 0
+    batch_dir = args.batch_dir
     chat_formatting_function = dynamic_import_function("templates.create_prompt_with_huggingface_tokenizer_template")
     model = vllm.LLM(
         model=model_id,
@@ -621,7 +630,9 @@ if __name__ == "__main__":
 
     os.makedirs(args.batch_dir, exist_ok=True)
     documents = []
-    # seed_tasks, documents = main_diff(roundi, seed_tasks, args.is_vllm, args.batch_length, model, sampling_params, chat_formatting_function)
-    # for roundi in range(2):
-    roundi = 1
-    seed_tasks = main_com(roundi, seed_tasks, args.is_vllm, model, sampling_params, chat_formatting_function, documents)
+    seed_tasks, documents = main_diff(roundi, seed_tasks, args.is_vllm, args.batch_length, model, sampling_params, chat_formatting_function)
+    for roundi in range(2):
+    # roundi = 1
+        seed_tasks = main_com(roundi, seed_tasks, args.is_vllm, model, sampling_params, chat_formatting_function, documents)
+    
+    response_generate_main(batch_dir, seed_tasks, model, sampling_params, chat_formatting_function)

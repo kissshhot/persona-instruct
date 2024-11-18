@@ -15,7 +15,7 @@ import pdb
 import argparse
 from prompts.prompt_template_persona2 import persona_generate, persona_generate_simple, persona_com_instruct_generate_rewrite
 from prompts.score_template import score_template
-os.environ["CUDA_VISIBLE_DEVICES"] = "4,5,6,7"
+# os.environ["CUDA_VISIBLE_DEVICES"] = "4,5,6,7"
 model_id = "/data1/dyf/model/Mistral-7B-Instruct-v0.3/"
 tokenizer = AutoTokenizer.from_pretrained(model_id)
 # def get_current_weather(location: str, format: str):

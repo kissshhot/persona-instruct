@@ -88,7 +88,7 @@ def embedding_filter(txt, sentence_embedding):
     txt_embeddings = torch.nn.functional.normalize(txt_embeddings, p=2, dim=1)
     score_list =[txt_embeddings[0] @ sentence_embedding[i] for i in range(0, len(sentence_embedding))]
     # sentence_embedding = torch.cat((sentence_embedding, txt_embeddings), dim=0)
-    if any(x > 0.9 for x in score_list):
+    if any(x > 0.85 for x in score_list):
         print('embedding不符')
         return False, sentence_embedding
     else:
@@ -259,6 +259,7 @@ def parse_args():
 def UCB_sample_record(seed_tasks, batch_length, roundi, is_vllm, model, sampling_params, chat_formatting_function): #记录次数，并加入UCB评分进行采样
 
     all_logs=[]
+    raw_logs = []
     documents = []
     questioner_doc = []
     respondent_doc = []
@@ -270,8 +271,8 @@ def UCB_sample_record(seed_tasks, batch_length, roundi, is_vllm, model, sampling
     #     questioner_doc.append(tmp['questioner'])
     # for tmp in seed_tasks:
     #     respondent_doc.append(tmp['respondent'])
-    # question_embedding = torch.load('/home/dyf/data_generate/persona-instruct/embedding/question_embedding.pt')
-    # questioner_embedding = torch.load('/home/dyf/data_generate/persona-instruct/embedding/questioner_embedding.pt')
+    question_embedding = torch.load('/home/dyf/data_generate/persona-instruct/embedding/question_embedding.pt')
+    questioner_embedding = torch.load('/home/dyf/data_generate/persona-instruct/embedding/questioner_embedding.pt')
     if is_vllm == True:
         # chat_formatting_function = dynamic_import_function("templates.create_prompt_with_huggingface_tokenizer_template")
         # model = vllm.LLM(
@@ -294,7 +295,7 @@ def UCB_sample_record(seed_tasks, batch_length, roundi, is_vllm, model, sampling
         #     # default=[],
         # )
         x = 0
-        for idx in range(batch_length): #len(seed_tasks)
+        for idx in range(10000): #len(seed_tasks)
             # if x == 100:
             #     pdb.set_trace()
             # for tmp in seed_tasks:
@@ -327,8 +328,8 @@ def UCB_sample_record(seed_tasks, batch_length, roundi, is_vllm, model, sampling
             # task = sorted(seed_tasks, key=lambda x: x['ucb'], reverse=True)[:k] # , reverse=True
 
             #如果达标了才select_time + 1，那么就会一直重复选这k个
-            for temp in task:
-                temp['select_time'] = temp['select_time'] + 1
+            # for temp in task:
+            #     temp['select_time'] = temp['select_time'] + 1
             prompt = persona_diff_instruct_generate_wo_question.format(questioner1=task[0]['questioner'], questioner2=task[1]['questioner'], questioner3=task[2]['questioner'], questioner4=task[3]['questioner'], respondent1=task[0]['respondent'], respondent2=task[1]['respondent'], respondent3=task[2]['respondent'], respondent4=task[3]['respondent'], question1=task[0]['conversations'][0], question2=task[1]['conversations'][0], question3=task[2]['conversations'][0], question4=task[3]['conversations'][0])
             # prompt = persona_diff_instruct_generate_simple.format(questioner1=task[0]['questioner'], questioner2=task[1]['questioner'], questioner3=task[2]['questioner'], question1=task[0]['conversations'][0], question2=task[1]['conversations'][0], question3=task[2]['conversations'][0])
             et = 0
@@ -363,42 +364,26 @@ def UCB_sample_record(seed_tasks, batch_length, roundi, is_vllm, model, sampling
             #     pdb.set_trace()
             print(prompt)
             print(result)
-            # f1, _ = embedding_filter(question, question_embedding)
-            # f2, _ = embedding_filter(questioner, questioner_embedding)
-            if True: # filter_output(documents, question) and filter_output(questioner_doc, questioner) and f1 and f2: # and filter_output(respondent_doc, respondent): # and quality_score_vllm(question, model, sampling_params, chat_formatting_function):
-                # _, question_embedding = embedding_filter(question, question_embedding)
-                # _, questioner_embedding  = embedding_filter(questioner, questioner_embedding)
-                documents.append(question)
-                questioner_doc.append(questioner)
-                respondent_doc.append(respondent)
-                print(result)
-                t = {}
-                t['questioner'] = questioner
-                # t['respondent'] = respondent
-                # t['Relationship'] = respondent
-                t['conversations'] = []
-                t['conversations'].append(question)
-                t['select_time'] = 1
-                if idx <= 1000:
-                    wrong_log = wrong_log + task + [t]
-                all_logs.append(t)
-                # seed_tasks.append(t)
-                # output log at each iteration
-                # if len(all_logs) >= 15000:
-                #     break
-                output_log_jsonl(os.path.join('/home/dyf/data_generate/persona-instruct/data/lima/epoch/diff/', f"diff_new_instruct_{batch_length}_person2_round_{roundi}.jsonl"), all_logs)
-                # output log merge
-                output_log_jsonl(os.path.join("/home/dyf/data_generate/persona-instruct/data/lima/merged/", f"diff_merged_instruct_{batch_length}_person2_round_{roundi}.jsonl"), seed_tasks)
-                output_log_jsonl(os.path.join("/home/dyf/data_generate/persona-instruct/data/lima/wrong/", f"check_log_round_{roundi}.jsonl"), wrong_log)
-                # output_log_jsonl(os.path.join("/home/dyf/data_generate/persona-instruct/data/lima/wrong/", f"bool_log_round_{roundi}.jsonl"), test_log)
-            else:
-                test_ = {}
-                test_['id'] = idx
-                test_['result'] = [filter_output(documents, question), filter_output(questioner_doc, questioner), f1, f2]
-                test_log.append(test_)
-                output_log_jsonl(os.path.join("/home/dyf/data_generate/persona-instruct/data/lima/wrong/", f"bool_log_round_{roundi}.jsonl"), test_log)
-                continue
-        output_log_jsonl(os.path.join("/home/dyf/data_generate/persona-instruct/data/lima/merged/", f"diff_merged_instruct_{batch_length}_person2_round_{roundi}.jsonl"), seed_tasks + all_logs)
+            # pdb.set_trace()
+            t = {}
+            t['idx'] = idx
+            t['questioner'] = questioner
+            # t['respondent'] = respondent
+            # t['Relationship'] = respondent
+            t['conversations'] = []
+            t['conversations'].append(question)
+            raw_logs.append(t)
+            # respondent_doc.append(respondent)
+            print(result)
+
+            if idx <= 1000:
+                wrong_log = wrong_log + task + [t]
+            all_logs.append(t)
+            # seed_tasks.append(t)
+            # output log at each iteration
+            output_log_jsonl(os.path.join('/home/dyf/data_generate/persona-instruct/data/lima/epoch/diff/', f"diff_new_instruct_{batch_length}_person2_round_{roundi}.jsonl"), all_logs)
+            output_log_jsonl(os.path.join("/home/dyf/data_generate/persona-instruct/data/lima/raw_data/", f"diff_raw_instruct_{batch_length}_person2_round_{roundi}.jsonl"), raw_logs)
+            output_log_jsonl(os.path.join("/home/dyf/data_generate/persona-instruct/data/lima/merged/", f"diff_merged_instruct_{batch_length}_person2_round_{roundi}.jsonl"), seed_tasks + all_logs)
     else:
         model = AutoModelForCausalLM.from_pretrained(model_id, device_map="auto")
         for idx in range(batch_length): #len(seed_tasks)
