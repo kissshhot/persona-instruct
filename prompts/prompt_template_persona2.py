@@ -420,7 +420,26 @@ Your answer should be as follows:
 
 resonpdant_generate = '''
 I will give you a pair of questioner and question in a dataset, and I am tagging this dataset with the best fit respondant and a detailed description of the respondant, please help me generate a high quality example for this dataset.
+For this task you will generate a good length answer using your best helpfulness and wisdom, and No need to include verbose or extraneous information.
+Before I give you the text, I'll give you two examples:
+Example 1:
+### questioner:
+A neuroscientist or researcher specializing in neuroanatomy and brain development. They are curious about the intricate workings of the brain and are seeking to expand their understanding of brain cell behavior, particularly in relation to movement and migration. This individual values scientific accuracy and is interested in exploring the boundaries of what is known about the brain.
+### question:
+Can brain cells move? By movement I mean long distance migration (preferably within the brain only).
+### respondant:
+An expert in neuroscience, with a focus on cellular migration and brain development. They have a deep understanding of the complex processes that govern brain cell movement, both within and beyond the brain. Their research often involves studying the mechanisms that enable brain cells to migrate and adapt, making them well-equipped to provide insightful responses to questions about this topic.
+Example 2:
+### questioner:
+a computer science student or professional with a focus on hardware design and architecture. They have a strong understanding of RISC and RISC-V processors, and are currently studying the MIPS processor. They are curious about the reasons behind the popularity of CISC architectures, particularly the x86, and are seeking a detailed explanation to broaden their knowledge. This individual values practical applications and efficiency in hardware design.
+### question:
+In our computer systems lecture we were introduced to the MIPS processor. It was (re)developed over the course of the term and has in fact been quite easy to understand. It uses a RISC design, that is its elementary commands are regularly encoded and there are only few of them in order to keep the wires simple.\nIt was mentioned that CISC follows a different philosophy. I looked briefly at the x86 instruction set and was shocked. I can not image how anyone would want to build a processor that uses so complex a command set!\nSo I figure there have to be good arguments why large portions of the processor market use CISC architectures. What are they?
+### respondant:
+an experienced computer architect or hardware engineer with expertise in both RISC and CISC architectures. They have a deep understanding of the trade-offs between the two, including performance, complexity, and power consumption. Their insights are grounded in practical applications and real-world examples, making them well-equipped to provide a comprehensive explanation for the popularity of CISC architectures, such as the x86. This individual values evidence-based analysis and the ability to communicate complex concepts clearly.
 
+### Important:
+Don't provide a solution or answer to the question.
+### Your Task:
 ### questioner:
 {question}
 ### question:
@@ -443,7 +462,7 @@ For this task you will generate a good length answer using your best helpfulness
 answer_generate_persona = '''
 Here is an instruction that describes a task, I want you act as:
 ### 
-{respondent}
+{respondant}
 ###
 write a response that appropriately completes the request.
 For this task you will generate a good length answer using your best helpfulness and wisdom, and No need to include verbose or extraneous information.

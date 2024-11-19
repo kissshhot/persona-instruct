@@ -302,6 +302,7 @@ def random_sample(seed_tasks, roundi, is_vllm, model, sampling_params, chat_form
             else:
                 continue
         print(len(all_logs))
+        return all_logs
 
 def UCB_sample_record(seed_tasks, batch_length, roundi, is_vllm, model, sampling_params, chat_formatting_function): #记录次数，并加入UCB评分进行采样
 
@@ -342,7 +343,7 @@ def UCB_sample_record(seed_tasks, batch_length, roundi, is_vllm, model, sampling
         #     # default=[],
         # )
         x = 0
-        for idx in tqdm(range(batch_length)): #len(seed_tasks)
+        for idx in tqdm(range(30000000)): #len(seed_tasks)
             # if x == 100:
             # pdb.set_trace()
             # for tmp in seed_tasks:
@@ -432,7 +433,7 @@ def UCB_sample_record(seed_tasks, batch_length, roundi, is_vllm, model, sampling
                 all_logs.append(t)
                 # seed_tasks.append(t)
                 # output log at each iteration
-                if len(all_logs) >= 1030:
+                if len(all_logs) >= batch_length:
                     break
                 output_log_jsonl(os.path.join('/home/dyf/data_generate/persona-instruct/data/lima/wo_persona/', f"diff_new_instruct_{batch_length}_person2_round_{roundi}.jsonl"), all_logs)
                 # output log merge
@@ -630,9 +631,9 @@ if __name__ == "__main__":
 
     os.makedirs(args.batch_dir, exist_ok=True)
     documents = []
-    seed_tasks, documents = main_diff(roundi, seed_tasks, args.is_vllm, args.batch_length, model, sampling_params, chat_formatting_function)
-    for roundi in range(2):
-    # roundi = 1
-        seed_tasks = main_com(roundi, seed_tasks, args.is_vllm, model, sampling_params, chat_formatting_function, documents)
+    # seed_tasks, documents = main_diff(roundi, seed_tasks, args.is_vllm, args.batch_length, model, sampling_params, chat_formatting_function)
+    # for roundi in range(2):
+    roundi = 1
+    seed_tasks = main_com(roundi, seed_tasks, args.is_vllm, model, sampling_params, chat_formatting_function, documents)
     
     response_generate_main(batch_dir, seed_tasks, model, sampling_params, chat_formatting_function)

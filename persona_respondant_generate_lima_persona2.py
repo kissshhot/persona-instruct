@@ -115,28 +115,39 @@ def respondant_generate_main(seed_tasks, model, sampling_params, chat_formatting
         prompt = resonpdant_generate.format(questioner=questioner, question=question).strip()
         # while True:
         result = use_vllm([prompt], model, sampling_params, chat_formatting_function).strip()
+        # print(result)
         try:
-            if '### respondent:\n' in result:
-                respondent = result.split('### respondent:')[1].strip()
+            if '### respondant:' in result:
+                respondant = result.split('### respondant:')[1].strip()
+                if '\n' in respondant:
+                    respondant = respondant.split('\n')[0].strip()
+            elif 'respondant:' in result:
+                respondant = result.split('respondant:')[1].strip()
+                if '\n' in respondant:
+                    respondant = respondant.split('\n')[0].strip()
             else:
-                respondent = result.split('respondent:')[1].strip()
+                respondant = result
+                if '\n' in respondant:
+                    respondant = respondant.split('\n')[0].strip()
             # if len(respondent.split('\n')) >= 2:
             #     respondent = respondent.split('\n')[0]
             # break
         except:
             #pdb.set_trace()
+            print('error')
             continue
         print(result)
         # t = seed_tasks[idx]
-        seed_tasks['respondent'] = respondent
+        seed_tasks[idx]['respondant'] = respondant
+        # seed_tasks['respondent'] = respondent
         # all_logs.append(t)
-        print(respondent)
+        print(respondant)
         # if len(all_logs) >=2:
         #     if all_logs[-1] == all_logs[-2]:
         #         pdb.set_trace()
         # output log at each iteration
         output_log_jsonl(os.path.join("/home/dyf/data_generate/persona-instruct/data/lima/respondant_add/", "respondant_add_w_vllm.jsonl"), seed_tasks)
-        return seed_tasks
+    return seed_tasks
 
 # if __name__ == "__main__":
     # args = parse_args()

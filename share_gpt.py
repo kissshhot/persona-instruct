@@ -21,6 +21,8 @@ def convert_jsonl_to_sharegpt(input_file, output_file):
             if conversations:
                 # 偶数索引是提问者（"user"），奇数索引是回答者（"assistant"）
                 for j, text in enumerate(conversations):
+                    if j > 1:
+                        print(i)
                     role = "user" if j % 2 == 0 else "assistant"
                     conversation_data["conversations"].append({
                         "role": role,
@@ -35,6 +37,6 @@ def convert_jsonl_to_sharegpt(input_file, output_file):
         json.dump(sharegpt_data, f, ensure_ascii=False, indent=2)
 
 # 使用该函数
-input_file = "/home/dyf/data_generate/persona-instruct/data/lima_train.jsonl"  # 输入的 JSONL 文件
-output_file = "/home/dyf/data_generate/persona-instruct/data/lima/share_gpt/lima_train.json"  # 输出的 ShareGPT 格式 JSON 文件
+input_file = "/home/dyf/data_generate/persona-instruct/data/lima/wo_persona/raw_response.jsonl"  # 输入的 JSONL 文件
+output_file = "/home/dyf/data_generate/persona-instruct/data/lima/share_gpt/wo-persona.json"  # 输出的 ShareGPT 格式 JSON 文件
 convert_jsonl_to_sharegpt(input_file, output_file)

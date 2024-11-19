@@ -93,15 +93,15 @@ def use_vllm(prompts, model, sampling_params, chat_formatting_function):
     return outputs[0]
 
 
-def response_generate_main(batch_dir, seed_tasks, chat_formatting_function, model, sampling_params):
-    all_logs = []
+def response_generate_main(batch_dir, seed_tasks, lima_data, model, sampling_params, chat_formatting_function):
+    all_logs = lima_data
     # import copy
     # original_list = [[1, 2, 3], [4, 5, 6]]
     copied_list = copy.deepcopy(seed_tasks)
     for t in tqdm(copied_list):
         # instruction = t['conversations'][0]
         # prompt = persona_com_instruct_generate_rewrite.format(questioner=questioner, question=question)
-        prompt = t['conversations'][0] # answer_generate.format(instruction=instruction).strip()
+        prompt = t['conversations'][0].strip() # answer_generate.format(instruction=instruction).strip()
         # conversation = [{"role": "user", "content": inputs}]
         # tools = [get_current_weather]
 
@@ -122,6 +122,7 @@ def response_generate_main(batch_dir, seed_tasks, chat_formatting_function, mode
         # except:
         #     continue
         # answer = result
+        print(result)
         t['conversations'].append(result)
         all_logs.append(t)
         # if len(all_logs) >= 10000:

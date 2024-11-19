@@ -95,13 +95,16 @@ def use_vllm(prompts, model, sampling_params, chat_formatting_function):
     outputs = [it.outputs[0].text for it in outputs]
     return outputs[0]
 
-def persona_response_generate_main(batch_dir, seed_tasks, model, sampling_params, chat_formatting_function):
-    all_logs = []
+def persona_response_generate_main(batch_dir, seed_tasks, lima_data, model, sampling_params, chat_formatting_function):
+    all_logs = lima_data
     copied_list = copy.deepcopy(seed_tasks)
     for t in copied_list:
-        respondent = t['respondent']
-        instruction = t['question']
-        prompt = answer_generate_persona.format(respondent=respondent, instruction=instruction)
+        try:
+            respondant = t['respondant']
+        except:
+            continue
+        instruction = t['conversations'][0]
+        prompt = answer_generate_persona.format(respondant=respondant, instruction=instruction)
         # conversation = [{"role": "user", "content": inputs}]
         # # tools = [get_current_weather]
 

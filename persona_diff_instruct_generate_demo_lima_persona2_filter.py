@@ -479,7 +479,7 @@ def UCB_sample_record(seed_tasks, batch_length, roundi, is_vllm, model, sampling
                 output_log_jsonl(os.path.join("/home/dyf/data_generate/persona-instruct/data/lima/merged/", f"diff_merged_instruct_{batch_length}_person2_round_{roundi}.jsonl"), seed_tasks)
             else:
                 continue
-    all_logs = seed_tasks + all_logs
+    # all_logs = seed_tasks + all_logs
     return all_logs, documents
 
 
