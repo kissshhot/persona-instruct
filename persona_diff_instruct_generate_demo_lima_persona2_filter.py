@@ -12,7 +12,7 @@ import re
 import string
 import tqdm
 import argparse
-from prompts.prompt_template_persona2 import persona_generate, persona_generate_simple, persona_diff_instruct_generate, persona_diff_instruct_generate_simple, persona_diff_instruct_generate_re, persona_diff_instruct_generate_wo_question
+from prompts.prompt_template_persona2 import persona_generate, persona_generate_simple, persona_diff_instruct_generate, persona_diff_instruct_generate_simple, persona_diff_instruct_generate_re, persona_diff_instruct_generate_wo_question, persona_diff_instruct_generate_3_shot
 from prompts.score_template import score_template
 # os.environ["CUDA_VISIBLE_DEVICES"] = "3"
 model_id = "/data1/dyf/model/Mistral-7B-Instruct-v0.3/"
@@ -258,6 +258,7 @@ def parse_args():
 
 def UCB_sample_record(seed_tasks, batch_length, roundi, is_vllm, model, sampling_params, chat_formatting_function): #记录次数，并加入UCB评分进行采样
     all_logs=[]
+    raw_logs=[]
     documents = []
     questioner_doc = []
     respondent_doc = []
@@ -326,6 +327,7 @@ def UCB_sample_record(seed_tasks, batch_length, roundi, is_vllm, model, sampling
             # task = sorted(seed_tasks, key=lambda x: x['ucb'], reverse=True)[:k] # , reverse=True
 
             #如果达标了才select_time + 1，那么就会一直重复选这k个
+            # persona_diff_instruct_generate_3_shot persona_diff_instruct_generate_wo_question
             prompt = persona_diff_instruct_generate_wo_question.format(questioner1=task[0]['questioner'], questioner2=task[1]['questioner'], questioner3=task[2]['questioner'], questioner4=task[3]['questioner'], respondent1=task[0]['respondent'], respondent2=task[1]['respondent'], respondent3=task[2]['respondent'], respondent4=task[3]['respondent'], question1=task[0]['conversations'][0], question2=task[1]['conversations'][0], question3=task[2]['conversations'][0], question4=task[3]['conversations'][0])
             # prompt = persona_diff_instruct_generate_simple.format(questioner1=task[0]['questioner'], questioner2=task[1]['questioner'], questioner3=task[2]['questioner'], question1=task[0]['conversations'][0], question2=task[1]['conversations'][0], question3=task[2]['conversations'][0])
             et = 0
@@ -360,6 +362,15 @@ def UCB_sample_record(seed_tasks, batch_length, roundi, is_vllm, model, sampling
             #     pdb.set_trace()
             print(prompt)
             print(result)
+            t = {}
+            t['idx'] = idx
+            t['questioner'] = questioner
+            # t['respondent'] = respondent
+            # t['Relationship'] = respondent
+            t['conversations'] = []
+            t['conversations'].append(question)
+            raw_logs.append(t)
+            output_log_jsonl(os.path.join("/home/dyf/data_generate/persona-instruct/data/lima/raw_data/", f"diff_raw_instruct_{batch_length}_person2_round_{roundi}.jsonl"), raw_logs)
             f1, _ = embedding_filter(question, question_embedding)
             f2, _ = embedding_filter(questioner, questioner_embedding)
             if f1 and f2: # filter_output(documents, question) and filter_output(questioner_doc, questioner) and f1 and f2: # and filter_output(respondent_doc, respondent): # and quality_score_vllm(question, model, sampling_params, chat_formatting_function):
@@ -369,13 +380,14 @@ def UCB_sample_record(seed_tasks, batch_length, roundi, is_vllm, model, sampling
                 # questioner_doc.append(questioner)
                 # respondent_doc.append(respondent)
                 print(result)
-                t = {}
-                t['questioner'] = questioner
-                # t['respondent'] = respondent
-                # t['Relationship'] = respondent
-                t['conversations'] = []
-                t['conversations'].append(question)
-                t['select_time'] = 1
+                # t = {}
+                # t['questioner'] = questioner
+                # # t['respondent'] = respondent
+                # # t['Relationship'] = respondent
+                # t['conversations'] = []
+                # t['conversations'].append(question)
+                # t['idx'] = idx
+                # t['select_time'] = 1
                 if idx <= 1000:
                     wrong_log = wrong_log + task + [t]
                 all_logs.append(t)
@@ -386,15 +398,17 @@ def UCB_sample_record(seed_tasks, batch_length, roundi, is_vllm, model, sampling
                 output_log_jsonl(os.path.join('/home/dyf/data_generate/persona-instruct/data/lima/epoch/diff/', f"diff_new_instruct_{batch_length}_person2_round_{roundi}.jsonl"), all_logs)
                 # output log merge
                 output_log_jsonl(os.path.join("/home/dyf/data_generate/persona-instruct/data/lima/merged/", f"diff_merged_instruct_{batch_length}_person2_round_{roundi}.jsonl"), seed_tasks)
-                output_log_jsonl(os.path.join("/home/dyf/data_generate/persona-instruct/data/lima/wrong/", f"check_log_round_{roundi}.jsonl"), wrong_log)
+                output_log_jsonl(os.path.join("/home/dyf/data_generate/persona-instruct/data/lima/wrong/", f"check_log_{batch_length}_round_{roundi}.jsonl"), wrong_log)
                 # output_log_jsonl(os.path.join("/home/dyf/data_generate/persona-instruct/data/lima/wrong/", f"bool_log_round_{roundi}.jsonl"), test_log)
             else:
                 test_ = {}
                 test_['id'] = idx
                 test_['result'] = [f1, f2]
                 test_log.append(test_)
-                output_log_jsonl(os.path.join("/home/dyf/data_generate/persona-instruct/data/lima/wrong/", f"bool_log_round_{roundi}.jsonl"), test_log)
+                output_log_jsonl(os.path.join("/home/dyf/data_generate/persona-instruct/data/lima/wrong/", f"bool_log_{batch_length}_round_{roundi}.jsonl"), test_log)
                 continue
+            torch.save(question_embedding, f'/home/dyf/data_generate/persona-instruct/embedding/question_embedding_{batch_length}_all.pt')
+            torch.save(questioner_embedding, f'/home/dyf/data_generate/persona-instruct/embedding/questioner_embedding_{batch_length}_all.pt')
         output_log_jsonl(os.path.join("/home/dyf/data_generate/persona-instruct/data/lima/merged/", f"diff_merged_instruct_{batch_length}_person2_round_{roundi}.jsonl"), seed_tasks + all_logs)
     else:
         model = AutoModelForCausalLM.from_pretrained(model_id, device_map="auto")

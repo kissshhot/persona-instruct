@@ -9,6 +9,7 @@ tokenizer = AutoTokenizer.from_pretrained(model_id)
 # model = AutoModelForCausalLM.from_pretrained(model_id, device_map="auto")
 from prompts.prompt_template_persona2 import answer_generate_persona
 import copy
+from tqdm import tqdm
 # rejection sampling
 # 接下来，我们设定一些标准，比如：
 # 回答必须与问题相关。
@@ -98,7 +99,7 @@ def use_vllm(prompts, model, sampling_params, chat_formatting_function):
 def persona_response_generate_main(batch_dir, seed_tasks, lima_data, model, sampling_params, chat_formatting_function):
     all_logs = lima_data
     copied_list = copy.deepcopy(seed_tasks)
-    for t in copied_list:
+    for t in tqdm(copied_list):
         try:
             respondant = t['respondant']
         except:
@@ -123,7 +124,7 @@ def persona_response_generate_main(batch_dir, seed_tasks, lima_data, model, samp
         all_logs.append(t)
         # if len(all_logs) >= 10000:
         #     break
-        output_log_jsonl(os.path.join(batch_dir, "persona_response.jsonl"), all_logs) 
+        output_log_jsonl(os.path.join(batch_dir, "persona-response.jsonl"), all_logs) 
 
 def multi_sample(seed_tasks): #生成多个回答并进行选择
     for t in seed_tasks:

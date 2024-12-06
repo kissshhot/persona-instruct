@@ -65,22 +65,20 @@ Your answer should be as follows:
 # description: <a detailed description of the person>
 # reason: <reason for the person>
 persona_com_instruct_generate = '''
-Please generate **only one** new description based on the existing description and the given task or
-question. Then, using all the descriptions, create a new, more challenging version of the task
-or question.
-### Important: The new description should differ from the previous description and relate to the context
-of the question.
+Please add **only one** new description based on the existing questioner and the given question. Then, using the new questioner, create a new, more challenging version of the question.
+### Important:
+1. When generating new questions, I want you to play the role of the new questioner.
+2. You need to explain why the new question is more challenging.
+3. Don't provide a solution or answer to the new question.
 ### Format:
 [questioner]: Here are the existing description of questioner.
-[respondent]: Here are the existing description of respondent.
 [Original Question]: Here is the original question.
 Output:
 [New questioner]: Here is the new description of questioner.
-[New respondent]: Here is the new description of respondent.
 [New Question]: Here is the new question.
+[Reason]: Your reason for the new question.
 ### Your Task:
 [questioner]: {questioner}
-[respondent]: {respondent}
 [Original Question]: {question}
 Output:
 '''
@@ -105,6 +103,26 @@ Output:
 # [Respondent]: {respondent}
 # Output:
 # 1. The new questioner should differ from the previous questioner and relate to the context of the new question.
+# and generate a new question that you are most likely to say|listen|write|read
+
+# persona_com_instruct_generate_rewrite = '''
+# Please generate one new questioner based on the given questioner and question. Then, using the new questioner, generate a new, high quality and more challenging version of the question.
+# ### Important:
+# 1. When generating new questions, I want you to play the role of the new questioner.
+# 2. You need to explain why the new question is more challenging.
+# 3. Don't provide a solution or answer to the new question.
+# ### Format:
+# [Questioner]: Here is the existing description of questioner.
+# [Original Question]: Here is the original question.
+# Output:
+# [New Questioner]: Here is the description of new questioner.
+# [New Question]: Here is the new question.
+# [Reason]: Your reason for the new question.
+# ### Your Task:
+# [Questioner]: {questioner}
+# [Original Question]: {question}
+# Output:
+# '''
 
 persona_com_instruct_generate_rewrite = '''
 Please generate one new questioner based on the existing questioner and the given question. Then, using the new questioner, generate a new, high quality and more challenging version of the question.
@@ -369,6 +387,34 @@ Your output should be as follows:
 [Collaborative Relationship]: Here is the possible collaborative relationship between the new questioner and the example questioners.
 '''
 
+persona_diff_instruct_generate_3_shot='''
+Generate a new questioner and a new query based on the following examples.
+### Example:
+Example 1:
+[questioner]: {questioner1}
+[question]: {question1}
+Example 2:
+[questioner]: {questioner2}
+[question]: {question2}
+Example 3:
+[questioner]: {questioner3}
+[question]: {question3}
+### Important:
+1. The new questioner and the Example questioners are in different domains.
+2. The new questioner is someone who, in some scenarios, may have a collaborative relationship with the Example 1, Example 2 and Example 3 questioners.
+3. You need to explain the possible collaborative relationship between the new questioner and the Example questioners.
+4. You can't refer to the Example questioners in the description of the new questioner, the description of the new questioner should be more general.
+5. The new question you generate and the example questions are independent of each other.
+6. When generating the new question, I want you to play the role of the new questioner and generate a new question that you are most likely to say|listen|write|read.
+7. Ensure that the new question you generate is of high quality.
+8. Don't provide a solution or answer to the new query.
+
+Your output should be as follows:
+[New Questioner]: Here is the description of the new questioner.
+[New Question]: Here is the new question.
+[Collaborative Relationship]: Here is the possible collaborative relationship between the new questioner and the example questioners.
+'''
+
 persona_diff_instruct_generate_reverse='''
 Generate a new questioner and a new query based on the following examples.
 ### Example:
@@ -384,7 +430,7 @@ Example 2:
 3. You need to explain the possible collaborative relationship between the new questioner and the Example questioners.
 4. You can't refer to the Example questioners in the description of the new questioner, the description of the new questioner should be more general.
 5. The new question you generate and the example questions are independent of each other.
-6. When generating the new question, I want you to play the role of the new questioner and generate a question that you are most likely to say|listen|write|read.
+6. When generating the new question, I want you to play the role of the new questioner and generate a question that you are most likely to ask.
 7. Don't provide a solution or answer to the new query.
 
 Your output should be as follows:

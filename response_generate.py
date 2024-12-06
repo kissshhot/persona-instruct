@@ -93,8 +93,8 @@ def use_vllm(prompts, model, sampling_params, chat_formatting_function):
     return outputs[0]
 
 
-def response_generate_main(batch_dir, seed_tasks, lima_data, model, sampling_params, chat_formatting_function):
-    all_logs = lima_data
+def response_generate_main(batch_dir, seed_tasks, model, sampling_params, chat_formatting_function):
+    all_logs = []
     # import copy
     # original_list = [[1, 2, 3], [4, 5, 6]]
     copied_list = copy.deepcopy(seed_tasks)
@@ -153,26 +153,27 @@ def response_generate_main(batch_dir, seed_tasks, lima_data, model, sampling_par
 #     # )
 #     single_sample(batch_dir, seed_tasks, chat_formatting_function, model, sampling_params)
 
-# if __name__ == "__main__":
-#     args = parse_args()
-#     seed_tasks = [json.loads(l) for l in open(args.seed_tasks_path, "r")]
-#     chat_formatting_function = dynamic_import_function("templates.create_prompt_with_huggingface_tokenizer_template")
-#     model = vllm.LLM(
-#         model=model_id,
-#         tokenizer=model_id,
-#         tokenizer_mode="auto",
-#         tensor_parallel_size=torch.cuda.device_count(),
-#         tokenizer_revision=None, 
-#         revision=None,
-#     )
+if __name__ == "__main__":
+    args = parse_args()
+    batch_dir = args.batch_dir
+    seed_tasks = [json.loads(l) for l in open(args.seed_tasks_path, "r")]
+    chat_formatting_function = dynamic_import_function("templates.create_prompt_with_huggingface_tokenizer_template")
+    model = vllm.LLM(
+        model=model_id,
+        tokenizer=model_id,
+        tokenizer_mode="auto",
+        tensor_parallel_size=torch.cuda.device_count(),
+        tokenizer_revision=None,
+        revision=None,
+    )
     
-#     sampling_params = vllm.SamplingParams(
-#         temperature=0.0,  # greedy decoding
-#         max_tokens=5000,
-#         # stop=args.additional_stop_sequence,
-#         # --additional_stop_sequence',
-#         # type=str,
-#         # nargs="+",
-#         # default=[],
-#     )
-#     single_sample(seed_tasks, chat_formatting_function, model, sampling_params)
+    sampling_params = vllm.SamplingParams(
+        temperature=0.0,  # greedy decoding
+        max_tokens=5000,
+        # stop=args.additional_stop_sequence,
+        # --additional_stop_sequence',
+        # type=str,
+        # nargs="+",
+        # default=[],
+    )
+    response_generate_main(batch_dir, seed_tasks, model, sampling_params, chat_formatting_function)

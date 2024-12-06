@@ -311,6 +311,6 @@ if __name__ == "__main__":
     seed_tasks, documents = main_diff(roundi, seed_tasks, args.is_vllm, args.batch_length, model, sampling_params, chat_formatting_function)
     # for roundi in range(2):
     # # roundi = 1
-    #     seed_tasks = main_com(roundi, seed_tasks, args.is_vllm, model, sampling_params, chat_formatting_function, documents)
+    #      seed_tasks = main_com(roundi, seed_tasks, args.is_vllm, model, sampling_params, chat_formatting_function, documents)
 
     # output_log_jsonl(os.path.join("/home/dyf/data_generate/persona-instruct/data/lima/final/", f"final.jsonl"), seed_tasks)

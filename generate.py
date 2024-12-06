@@ -89,9 +89,9 @@ if __name__ == "__main__":
     all_logs = []
     roundi = args.roundi
     batch_dir = args.batch_dir
-    # seed_tasks = [json.loads(l) for l in open(args.seed_tasks_path, "r")]
+    seed_tasks = [json.loads(l) for l in open(args.seed_tasks_path, "r")]
     lima_data = [json.loads(l) for l in open(args.seed_tasks_path, "r")]
-    seed_tasks = [json.loads(l) for l in open('/home/dyf/data_generate/persona-instruct/data/lima/final/final.jsonl', "r")]
+    # seed_tasks = [json.loads(l) for l in open('/home/dyf/data_generate/persona-instruct/data/lima/epoch/diff/diff_new_instruct_1030_person2_round_0.jsonl', "r")]
     documents = []
     for tmp in seed_tasks:
         documents.append(tmp['conversations'][0])
@@ -119,15 +119,15 @@ if __name__ == "__main__":
     # log1 = main_com(roundi, seed_tasks, args.is_vllm, model, sampling_params, chat_formatting_function, documents)
 
 
-    # seed_tasks, documents = main_diff(roundi, seed_tasks, args.is_vllm, args.batch_length, model, sampling_params, chat_formatting_function)
-    # # seed_tasks = embedding_filter_main(seed_tasks, args.batch_length)
+    seed_tasks, documents = main_diff(roundi, seed_tasks, args.is_vllm, args.batch_length, model, sampling_params, chat_formatting_function)
+    # seed_tasks = embedding_filter_main(seed_tasks, args.batch_length)
     # for roundi in range(2):
     # # # roundi = 1
-    #     seed_tasks = main_com(roundi, seed_tasks, args.is_vllm, model, sampling_params, chat_formatting_function, documents)
+    #     seed_tasks = main_com(roundi, seed_tasks, args.is_vllm,args.batch_length, model, sampling_params, chat_formatting_function, documents)
 
     # output_log_jsonl(os.path.join("/home/dyf/data_generate/persona-instruct/data/lima/final/", f"final.jsonl"), seed_tasks)
 
     # response_generate_main(batch_dir, seed_tasks, lima_data, model, sampling_params, chat_formatting_function)
-    seed_tasks = respondant_generate_main(seed_tasks, model, sampling_params, chat_formatting_function)
-    persona_response_generate_main(batch_dir, seed_tasks, lima_data, model, sampling_params, chat_formatting_function)
+    # seed_tasks = respondant_generate_main(seed_tasks, model, sampling_params, chat_formatting_function)
+    # persona_response_generate_main(batch_dir, seed_tasks, lima_data, model, sampling_params, chat_formatting_function)
 

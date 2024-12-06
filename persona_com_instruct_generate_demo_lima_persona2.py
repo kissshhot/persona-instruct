@@ -1,5 +1,4 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from datasketch import MinHash, MinHashLSH
 import numpy as np
 import torch
 import os
@@ -13,7 +12,7 @@ from importlib import import_module
 from tqdm import tqdm
 import pdb
 import argparse
-from prompts.prompt_template_persona2 import persona_generate, persona_generate_simple, persona_com_instruct_generate_rewrite
+from prompts.prompt_template_persona2 import persona_generate, persona_generate_simple, persona_com_instruct_generate_rewrite, persona_com_instruct_generate_rewrite_wo_persona, persona_com_instruct_generate
 from prompts.score_template import score_template
 # os.environ["CUDA_VISIBLE_DEVICES"] = "4,5,6,7"
 model_id = "/data1/dyf/model/Mistral-7B-Instruct-v0.3/"
@@ -262,46 +261,33 @@ def parse_args():
 #         merge_log = seed_tasks + all_logs
 #         output_log_jsonl(os.path.join("/home/dyf/data_generate/persona-instruct/data/lima/merged/", f"com_merged_instruct_round_{roundi}.jsonl"), merge_log)
 
-def random_sample(seed_tasks, roundi, is_vllm, model, sampling_params, chat_formatting_function, documents): #随机选择数据进行generate
-
-    all_logs=[]
-    documents = []
-    for tmp in seed_tasks:
-        documents.append(tmp['conversations'][0])
+def random_sample(seed_tasks, roundi, is_vllm, batch_length, model, sampling_params, chat_formatting_function, documents): #随机选择数据进行generate
+    if roundi > 0:
+        pre_tasks = [json.loads(l) for l in open(f"/home/dyf/data_generate/persona-instruct/data/lima/epoch/com/com_new_instruct_{batch_length}_round_{roundi-1}.jsonl", "r")]
     if is_vllm == True:
-        # chat_formatting_function = dynamic_import_function("templates.create_prompt_with_huggingface_tokenizer_template")
-        # model = vllm.LLM(
-        #     model=model_id,
-        #     tokenizer=model_id,
-        #     tokenizer_mode="auto",
-        #     tensor_parallel_size=torch.cuda.device_count(),
-        #     tokenizer_revision=None, 
-        #     revision=None,
-        # )
-        
-        # sampling_params = vllm.SamplingParams(
-        #     temperature=0.7,  # greedy decoding
-        #     top_p=0.9,
-        #     max_tokens=5000,
-        #     # stop=args.additional_stop_sequence,
-        #     # --additional_stop_sequence',
-        #     # type=str,
-        #     # nargs="+",
-        #     # default=[],
-        # )
+        flag = False
+        flag2 = False
         for idx in tqdm(range(len(seed_tasks))): # range(len(seed_tasks))
             # dialogue = ''
             # for tx in seed_tasks[idx]['conversations']:
             #     dialogue += tx + '\n'
+            if roundi > 0:
+                # pdb.set_trace()
+                if pre_tasks[idx]['complexity_score'] >= seed_tasks[idx]['complexity_score'] or seed_tasks[idx]['complexity_score'] >= 4.5:
+                    flag2 = True
+                    seed_tasks[idx] = pre_tasks[idx]
+                    continue
+                else:
+                    flag = True
             try:
                 questioner = seed_tasks[idx]['questioner']
             except:
                 pdb.set_trace()
-            # try:
-            #     respondent = seed_tasks[idx]['respondent']
-            # except:
-            #     pdb.set_trace()
-            # respondent = seed_tasks[idx]['respondent']
+                # try:
+                #     respondent = seed_tasks[idx]+     ['respondent']
+                # except:
+                #     pdb.set_trace()
+                # respondent = seed_tasks[idx]['respondent']
             question = seed_tasks[idx]['conversations'][0]
             # dialogue = seed_tasks[idx]['instruction'] # + '\n' + seed_tasks[idx]['instances'][0]['input'] + '\n' + seed_tasks[idx]['instances'][0]['output']
             prompt = persona_com_instruct_generate_rewrite.format(questioner=questioner, question=question)
@@ -332,10 +318,95 @@ def random_sample(seed_tasks, roundi, is_vllm, model, sampling_params, chat_form
                 #             break
             # filter_output(documents, question) and 
             if True:# quality_score_vllm(question, model, sampling_params, chat_formatting_function):
+                # documents.append(question)
+                seed_tasks[idx]['conversations'][0] = question
+                seed_tasks[idx]['questioner'] = questioner
+                print(result)
+                # t = {}
+                # t['questioner'] = questioner
+                # # t['respondent'] = respondent
+                # t['conversations'] = []
+                # t['conversations'].append(question)
+                # t['select_time'] = 1
+                # # t['id'] = 'com_1'
+                # # t['source'] = 'sharegpt'
+                # # t['conversations'] = []
+                # # t['conversations'].append({"from":"user", "value": })
+                # all_logs.append(t)
+                output_log_jsonl(os.path.join('/home/dyf/data_generate/persona-instruct/data/lima/epoch/com/', f"com_new_instruct_{batch_length}_round_{roundi+1}.jsonl"), seed_tasks) 
+            else:
+                continue
+    print(flag)
+    print(flag2)
+    return seed_tasks
+
+def random_sample_wo_persona(seed_tasks, roundi, is_vllm, model, sampling_params, chat_formatting_function, documents): #随机选择数据进行generate
+
+    all_logs=[]
+    documents = []
+    for tmp in seed_tasks:
+        documents.append(tmp['conversations'][0])
+    if is_vllm == True:
+        # chat_formatting_function = dynamic_import_function("templates.create_prompt_with_huggingface_tokenizer_template")
+        # model = vllm.LLM(
+        #     model=model_id,
+        #     tokenizer=model_id,
+        #     tokenizer_mode="auto",
+        #     tensor_parallel_size=torch.cuda.device_count(),
+        #     tokenizer_revision=None, 
+        #     revision=None,
+        # )
+        
+        # sampling_params = vllm.SamplingParams(
+        #     temperature=0.7,  # greedy decoding
+        #     top_p=0.9,
+        #     max_tokens=5000,
+        #     # stop=args.additional_stop_sequence,
+        #     # --additional_stop_sequence',
+        #     # type=str,
+        #     # nargs="+",
+        #     # default=[],
+        # )
+        for idx in tqdm(range(len(seed_tasks))): # range(len(seed_tasks))
+            # dialogue = ''
+            # for tx in seed_tasks[idx]['conversations']:
+            #     dialogue += tx + '\n'
+            # try:
+            #     respondent = seed_tasks[idx]['respondent']
+            # except:
+            #     pdb.set_trace()
+            # respondent = seed_tasks[idx]['respondent']
+            question = seed_tasks[idx]['conversations'][0]
+            # dialogue = seed_tasks[idx]['instruction'] # + '\n' + seed_tasks[idx]['instances'][0]['input'] + '\n' + seed_tasks[idx]['instances'][0]['output']
+            prompt = persona_com_instruct_generate_rewrite_wo_persona.format(question=question)
+            te = False
+            while True:
+                result = use_vllm([prompt], model, sampling_params, chat_formatting_function)
+                try:
+                    if '[Reason]: ' in result:
+                        question = result.split('[New Question]: ')[1].split('[Reason]: ')[0].strip('"')
+                    elif '\nReason:' in result:
+                        question = result.split('[New Question]: ')[1].split('\n\nReason:')[0].strip('"')
+                    else:
+                        te = True
+                        break
+                    # respondent = result.split('[New Respondent]: ')[1].split('[Reason]: ')[0].strip('"')
+                    break
+                except:
+                    te = True
+                    break
+            if te:
+                continue
+                # if len(result.split('[New Question]: ')) >= 2:
+                #     question = result.split('[New Question]: ')[1]
+                #     if len(result.split('[New Questioner]: ')) >= 2 and len(result.split('[New Respondent]: ')) >= 2:
+                #         if len(result.split('[New Questioner]: ')[1].split('\n')) >= 2 and len(result.split('[New Respondent]: ')[1].split('\n')) >= 2:
+                #             break
+            # filter_output(documents, question) and 
+            if True:# quality_score_vllm(question, model, sampling_params, chat_formatting_function):
                 documents.append(question)
                 print(result)
                 t = {}
-                t['questioner'] = questioner
                 # t['respondent'] = respondent
                 t['conversations'] = []
                 t['conversations'].append(question)
@@ -355,67 +426,7 @@ def random_sample(seed_tasks, roundi, is_vllm, model, sampling_params, chat_form
             else:
                 continue
         print(len(all_logs))
-    else:
-        model = AutoModelForCausalLM.from_pretrained(model_id, device_map="auto")
-        # task = random.sample(seed_tasks, batch_length)
-        for idx in tqdm(range(len(seed_tasks))): #len(seed_tasks)
-            # dialogue = ''
-            # for tx in seed_tasks[idx]['conversations']:
-            #     dialogue += tx + '\n'
-            questioner = seed_tasks[idx]['questioner']
-            respondent = seed_tasks[idx]['respondent']
-            question = seed_tasks[idx]['conversations'][0]
-            # dialogue = seed_tasks[idx]['instruction'] # + '\n' + seed_tasks[idx]['instances'][0]['input'] + '\n' + seed_tasks[idx]['instances'][0]['output']
-            inputs = persona_com_instruct_generate_rewrite.format(questioner=questioner, respondent=respondent, question=question)
-            conversation = [{"role": "user", "content": inputs}]
-            # tools = [get_current_weather]
-
-            # format and tokenize the tool use prompt 
-            inputs = tokenizer.apply_chat_template(
-                        conversation,
-                        add_generation_prompt=True,
-                        # return_dict=True,
-                        return_tensors="pt",
-            )
-
-            inputs = inputs.to('cuda')
-            while True:
-                outputs = model.generate(inputs, max_new_tokens=5000, do_sample=True, temperature=0.7, top_p=0.9) #现在貌似是gs，后面可能要改成sample
-                result = tokenizer.decode(outputs[0][len(inputs[0]):], skip_special_tokens=True)
-                try:
-                    question = result.split('[New Question]: ')[1]
-                    questioner = result.split('[New Questioner]: ')[1].split('\n')[0]
-                    respondent = result.split('[New Respondent]: ')[1].split('\n')[0]
-                    break
-                except:
-                    continue
-                # if len(result.split('[New Question]: ')) >= 2:
-                #     question = result.split('[New Question]: ')[1]
-                #     if len(result.split('[New Questioner]: ')) >= 2 and len(result.split('[New Respondent]: ')) >= 2:
-                #         if len(result.split('[New Questioner]: ')[1].split('\n')) >= 2 and len(result.split('[New Respondent]: ')[1].split('\n')) >= 2:
-                #             break
-            if quality_score(question, model): # filter_output(documents, question) and 
-                documents.append(question)
-                print(tokenizer.decode(outputs[0][len(inputs[0]):], skip_special_tokens=True))
-                t = {}
-                t['questioner'] = questioner
-                t['respondent'] = respondent
-                t['conversations'] = []
-                t['conversations'].append(question)
-                # t['id'] = 'com_1'
-                # t['source'] = 'sharegpt'
-                # t['conversations'] = []
-                # t['conversations'].append({"from":"user", "value": })
-                all_logs.append(t)
-                output_log_jsonl(os.path.join('/home/dyf/data_generate/persona-instruct/data/lima/epoch/com/', f"com_new_instruct_round_{roundi}_wo_vllm.jsonl"), all_logs) 
-                # output log at each iteration
-                merge_log = seed_tasks + all_logs
-                if len(merge_log) >= 10000:
-                    break
-                output_log_jsonl(os.path.join("/home/dyf/data_generate/persona-instruct/data/lima/merged/", f"com_merged_instruct_round_{roundi}_wo_vllm.jsonl"), merge_log)
-            else:
-                continue
-    return all_logs
+        return all_logs
         # print(len(all_logs))
 
 def random_sample_record(seed_tasks, batch_length, roundi): #选择过的数据会被记录选择次数
@@ -537,7 +548,7 @@ def random_sample_record_UCB(seed_tasks, batch_length, roundi, th): #记录次�
         else:
             continue
 
-def main_com(roundi, seed_tasks, is_vllm, model, sampling_params, chat_formatting_function, documents):
+def main_com(roundi, seed_tasks, is_vllm, batch_length, model, sampling_params, chat_formatting_function, documents):
     # args = parse_args()
     # if args.use_clf_seed_tasks_only:
     #     seed_tasks = [t for t in seed_tasks if t["is_classification"]]
@@ -547,7 +558,7 @@ def main_com(roundi, seed_tasks, is_vllm, model, sampling_params, chat_formattin
     # print(args)
     # print(args.use_vllm)
     # os.makedirs(args.batch_dir, exist_ok=True)
-    return random_sample(seed_tasks, roundi, is_vllm, model, sampling_params, chat_formatting_function, documents)
+    return random_sample(seed_tasks, roundi, is_vllm, batch_length, model, sampling_params, chat_formatting_function, documents)
 
 # if __name__ == "__main__":
 #     args = parse_args()
